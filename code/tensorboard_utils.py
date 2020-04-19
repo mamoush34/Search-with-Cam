@@ -26,7 +26,6 @@ class ImageLabelingLogger(tf.keras.callbacks.Callback):
         super(ImageLabelingLogger, self).__init__()
 
         self.datasets = datasets
-        self.task = datasets.task
 
         print("Done setting up image labeling logger.")
 
@@ -47,9 +46,9 @@ class ImageLabelingLogger(tf.keras.callbacks.Callback):
                 probabilities = self.model(np.array([image])).numpy()[0]
                 predict_class_idx = np.argmax(probabilities)
 
-                if self.task == '1':
-                    image = np.clip(image, 0., 1.)
-                    plt.imshow(image, cmap='gray')
+                
+                image = np.clip(image, 0., 1.)
+                plt.imshow(image, cmap='gray')
 
                 is_correct = correct_class_idx == predict_class_idx
 
