@@ -50,17 +50,6 @@ class ImageLabelingLogger(tf.keras.callbacks.Callback):
                 if self.task == '1':
                     image = np.clip(image, 0., 1.)
                     plt.imshow(image, cmap='gray')
-                else:
-                    # Undo VGG preprocessing
-                    mean = [103.939, 116.779, 123.68]
-                    image[..., 0] += mean[0]
-                    image[..., 1] += mean[1]
-                    image[..., 2] += mean[2]
-                    image = image[:, :, ::-1]
-                    image = image / 255.
-                    image = np.clip(image, 0., 1.)
-
-                    plt.imshow(image)
 
                 is_correct = correct_class_idx == predict_class_idx
 

@@ -15,12 +15,6 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Let's train some neural nets!")
     parser.add_argument(
-        '--task',
-        required=True,
-        choices=['1', '2'],
-        help='''Which task of the assignment to run -
-        training from scratch (1), or fine tuning VGG-16 (2).''')
-    parser.add_argument(
         '--data',
         default=os.getcwd() + '/../data/',
         help='Location where the dataset is stored.')
