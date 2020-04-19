@@ -1,9 +1,3 @@
-"""
-Project 4 - CNNs
-CS1430 - Computer Vision
-Brown University
-"""
-
 # Resize image size for task 1. Task 2 must have an image size of 224,
 # so that is hard coded in elsewhere.
 img_size = 224

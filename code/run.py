@@ -1,9 +1,3 @@
-"""
-Project 4 - CNNs
-CS1430 - Computer Vision
-Brown University
-"""
-
 import os
 import argparse
 import tensorflow as tf
@@ -30,11 +24,6 @@ def parse_args():
         '--data',
         default=os.getcwd() + '/../data/',
         help='Location where the dataset is stored.')
-    parser.add_argument(
-        '--load-vgg',
-        default=os.getcwd() + '/vgg16_imagenet.h5',
-        help='''Path to pre-trained VGG-16 file (only applicable to
-        task 2).''')
     parser.add_argument(
         '--load-checkpoint',
         default=None,
@@ -105,20 +94,11 @@ def main():
 
     datasets = Datasets(ARGS.data, ARGS.task)
 
-    if ARGS.task == '1':
-        model = YourModel()
-        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-        checkpoint_path = "./your_model_checkpoints/"
-        model.summary()
-    else:
-        model = VGGModel()
-        checkpoint_path = "./vgg_model_checkpoints/"
-        model(tf.keras.Input(shape=(224, 224, 3)))
-        model.summary()
 
-        # Don't load pretrained vgg if loading checkpoint
-        if ARGS.load_checkpoint is None:
-            model.load_weights(ARGS.load_vgg, by_name=True)
+    model = YourModel()
+    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    checkpoint_path = "./your_model_checkpoints/"
+    model.summary()
 
     if ARGS.load_checkpoint is not None:
         model.load_weights(ARGS.load_checkpoint)
