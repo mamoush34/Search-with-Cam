@@ -11,9 +11,8 @@ class Datasets():
     for preprocessing.
     """
 
-    def __init__(self, data_path, task):
+    def __init__(self, data_path):
         self.data_path = data_path
-        self.task = task
 
         # Dictionaries for (label index) <--> (class name)
         self.idx_to_class = {}
