@@ -3,7 +3,7 @@ import random
 import numpy as np
 from io import BytesIO
 import urllib
-import cv2
+from cv2 import cv2
 import ssl
 from PIL import Image
 from skimage import io
@@ -12,6 +12,8 @@ import hyperparameters as hp
 import pandas as pd
 import matplotlib.pyplot as plt
 from boundingbox import Boundingbox
+from HotEncoder import HotEncoder
+from sklearn.model_selection import train_test_split
 
 
 
@@ -37,6 +39,15 @@ class Datasets():
         self.mean = np.zeros((3,))
         self.std = np.ones((3,))
         self.calc_mean_and_std(train_images)
+
+        encoder = HotEncoder()
+        Y_end = encoder.fit_transform(train_labels)
+
+        #The splitting is done, so we can use it afterwards
+        X_train, X_test, Y_train, Y_test = train_test_split(train_images, Y_end, test_size=0.10)
+
+        self.train_data = self.augment_data(X_train, Y_train)
+        self.test_data =  self.augment_data(X_test, Y_test)
 
 
         # # Setup data generators
@@ -217,67 +228,71 @@ class Datasets():
         img = img / 255.
         img = self.standardize(img)
         return img
+    
+    def augment_data(self, X_data, Y_data):
+        augmenter = tf.keras.preprocessing.image.ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
+        return augmenter.flow(x=X_data, y=Y_data)
 
-    def get_data(self, path, shuffle, augment):
-        """ Returns an image data generator which can be iterated
-        through for images and corresponding class labels.
+    # def get_data(self, path, shuffle, augment):
+    #     """ Returns an image data generator which can be iterated
+    #     through for images and corresponding class labels.
 
-        Arguments:
-            path - Filepath of the data being imported, such as
-                   "../data/train" or "../data/test"
-            shuffle - Boolean value indicating whether the data should
-                      be randomly shuffled.
-            augment - Boolean value indicating whether the data should
-                      be augmented or not.
+    #     Arguments:
+    #         path - Filepath of the data being imported, such as
+    #                "../data/train" or "../data/test"
+    #         shuffle - Boolean value indicating whether the data should
+    #                   be randomly shuffled.
+    #         augment - Boolean value indicating whether the data should
+    #                   be augmented or not.
 
-        Returns:
-            An iterable image-batch generator
-        """
+    #     Returns:
+    #         An iterable image-batch generator
+    #     """
 
-        if augment:
-            #augmentation
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn, 
-                shear_range=0.2,
-                zoom_range=0.2,
-                horizontal_flip=True,
-                fill_mode='nearest'
-                )
+    #     if augment:
+    #         #augmentation
+    #         data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
+    #             preprocessing_function=self.preprocess_fn, 
+    #             shear_range=0.2,
+    #             zoom_range=0.2,
+    #             horizontal_flip=True,
+    #             fill_mode='nearest'
+    #             )
 
-            # ============================================================
-        else:
-            # Don't modify this
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn)
+    #         # ============================================================
+    #     else:
+    #         # Don't modify this
+    #         data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
+    #             preprocessing_function=self.preprocess_fn)
 
-        #setting the image size
-        img_size = hp.img_size
+    #     #setting the image size
+    #     img_size = hp.img_size
 
-        classes_for_flow = None
+    #     classes_for_flow = None
 
-        # Make sure all data generators are aligned in label indices
-        if bool(self.idx_to_class):
-            classes_for_flow = self.classes
+    #     # Make sure all data generators are aligned in label indices
+    #     if bool(self.idx_to_class):
+    #         classes_for_flow = self.classes
 
-        # Form image data generator from directory structure
-        data_gen = data_gen.flow_from_directory(
-            path,
-            target_size=(img_size, img_size),
-            class_mode='sparse',
-            batch_size=hp.batch_size,
-            shuffle=shuffle,
-            classes=classes_for_flow)
+    #     # Form image data generator from directory structure
+    #     data_gen = data_gen.flow_from_directory(
+    #         path,
+    #         target_size=(img_size, img_size),
+    #         class_mode='sparse',
+    #         batch_size=hp.batch_size,
+    #         shuffle=shuffle,
+    #         classes=classes_for_flow)
 
-        # Setup the dictionaries if not already done
-        if not bool(self.idx_to_class):
-            unordered_classes = []
-            for dir_name in os.listdir(path):
-                if os.path.isdir(os.path.join(path, dir_name)):
-                    unordered_classes.append(dir_name)
+    #     # Setup the dictionaries if not already done
+    #     if not bool(self.idx_to_class):
+    #         unordered_classes = []
+    #         for dir_name in os.listdir(path):
+    #             if os.path.isdir(os.path.join(path, dir_name)):
+    #                 unordered_classes.append(dir_name)
 
-            for img_class in unordered_classes:
-                self.idx_to_class[data_gen.class_indices[img_class]] = img_class
-                self.class_to_idx[img_class] = int(data_gen.class_indices[img_class])
-                self.classes[int(data_gen.class_indices[img_class])] = img_class
+    #         for img_class in unordered_classes:
+    #             self.idx_to_class[data_gen.class_indices[img_class]] = img_class
+    #             self.class_to_idx[img_class] = int(data_gen.class_indices[img_class])
+    #             self.classes[int(data_gen.class_indices[img_class])] = img_class
 
-        return data_gen
+    #     return data_gen
