@@ -5,6 +5,13 @@ from your_model import YourModel
 import hyperparameters as hp
 from preprocess import Datasets
 from tensorboard_utils import ImageLabelingLogger, ConfusionMatrixLogger
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from cv2 import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -87,8 +94,42 @@ def main():
 
     datasets = Datasets(ARGS.data)
 
+   
+    model = YourModel()
 
-    # model = YourModel()
+    checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+
+    hist = model.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 1000, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
+
+
+    #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
+    ### results found before.
+    iterations = 0
+    path = "../data/test-images.csv"
+    selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
+
+    for e,i in enumerate(os.listdir(path)):
+        if i.startswith("4"):
+            iterations += 1
+            img = cv2.imread(os.path.join(path,i))
+            selective_search.setBaseImage(img)
+            selective_search.switchToSelectiveSearchFast()
+            ssresults = selective_search.process()
+            imout = img.copy()
+            for e,result in enumerate(ssresults):
+                if e < 2000:
+                    x,y,w,h = result
+                    timage = imout[y:y+h,x:x+w]
+                    resized = cv2.resize(timage, (224,224), interpolation = cv2.INTER_AREA)
+                    img = np.expand_dims(resized, axis=0)
+                    out= model.predict(img)
+                    if out[0][0] > 0.70:
+                        cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
+            plt.figure()
+            plt.imshow(imout)
+            break
+
     # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
     # checkpoint_path = "./your_model_checkpoints/"
     # model.summary()
