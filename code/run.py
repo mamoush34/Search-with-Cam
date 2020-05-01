@@ -88,27 +88,27 @@ def main():
     datasets = Datasets(ARGS.data)
 
 
-    model = YourModel()
-    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-    checkpoint_path = "./your_model_checkpoints/"
-    model.summary()
+    # model = YourModel()
+    # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    # checkpoint_path = "./your_model_checkpoints/"
+    # model.summary()
 
-    if ARGS.load_checkpoint is not None:
-        model.load_weights(ARGS.load_checkpoint)
+    # if ARGS.load_checkpoint is not None:
+    #     model.load_weights(ARGS.load_checkpoint)
 
-    if not os.path.exists(checkpoint_path):
-        os.makedirs(checkpoint_path)
+    # if not os.path.exists(checkpoint_path):
+    #     os.makedirs(checkpoint_path)
 
-    # Compile model graph
-    model.compile(
-        optimizer=model.optimizer,
-        loss=model.loss_fn,
-        metrics=["sparse_categorical_accuracy"])
+    # # Compile model graph
+    # model.compile(
+    #     optimizer=model.optimizer,
+    #     loss=model.loss_fn,
+    #     metrics=["sparse_categorical_accuracy"])
 
-    if ARGS.evaluate:
-        test(model, datasets.test_data)
-    else:
-        train(model, datasets, checkpoint_path)
+    # if ARGS.evaluate:
+    #     test(model, datasets.test_data)
+    # else:
+    #     train(model, datasets, checkpoint_path)
 
 # Make arguments global
 ARGS = parse_args()

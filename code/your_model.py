@@ -1,7 +1,8 @@
 import tensorflow as tf
 import hyperparameters as hp
 from tensorflow.keras.layers import \
-        Conv2D, MaxPool2D, Dropout, Flatten, Dense
+        Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization
+from tensorflow.keras.optimizers import Adam
 
 class YourModel(tf.keras.Model):
     """ Your own neural network model. """
@@ -10,44 +11,40 @@ class YourModel(tf.keras.Model):
         super(YourModel, self).__init__()
 
         # Optimizer
-        self.optimizer = tf.keras.optimizers.RMSprop(
-            learning_rate=hp.learning_rate,
-            momentum=hp.momentum)
+        self.optimizer = Adam(lr=hp.learning_rate)
             
         arch = []
-        arch.append(Conv2D(filters=96, input_shape=(224, 224, 3), kernel_size=(11, 11), strides=(4, 4), padding='valid', activation='relu'))
-        arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
+        arch.append(Conv2D(filters= 96, input_shape=(227, 227, 3), kernel_size=(11, 11), strides=(4, 4), padding='same', activation='relu'))
+        arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='same'))
+        arch.append(BatchNormalization())
 
         arch.append(Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), padding='same', activation='relu'))
         arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
+        arch.append(BatchNormalization())
 
-        arch.append(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='same', activation='relu'))
+        arch.append(Conv2D(filters=384, kernel_size=(3,3), padding='same', activation='relu'))
+        
+        arch.append(Conv2D(filters=384, kernel_size=(3,3), padding='same', activation='relu'))
 
-        arch.append(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='same', activation='relu'))
-
-        arch.append(Conv2D(filters=256, kernel_size=(3,3), strides=(1,1), padding='same', activation='relu'))
-        arch.append(MaxPool2D(pool_size=(2,2), strides=(2,2), padding='valid'))
+        arch.append(Conv2D(filters=256, kernel_size=(3,3), padding='same', activation='relu'))
+        arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
 
         # Passing it to a Fully Connected layer
         arch.append(Flatten())
         # 1st Fully Connected Layer
-        arch.append(Dense(1024, input_shape=(224*224*3,), activation='relu'))
+        arch.append(Dense(4096, input_shape=(227*227*3,), activation='relu'))
         # Add Dropout to prevent overfitting
-        arch.append(Dropout(0.4))
+        arch.append(Dropout(0.5))
 
-        # 2nd Fully Connected Layer
-        arch.append(Dense(512, activation='relu'))
-        # Add Dropout
-        arch.append(Dropout(0.4))
+        arch.append(Dense(4096, activation='relu'))
+        arch.append(Dropout(0.5))
 
 
-        # 2nd Fully Connected Layer
-        arch.append(Dense(512, activation='relu'))
-        # Add Dropout
-        arch.append(Dropout(0.4))
+        arch.append(Dense(200, activation='relu'))
+        arch.append(Dropout(0.5))
 
         # Output Layer
-        arch.append(Dense(15, activation='softmax'))
+        arch.append(Dense(hp.category_num, activation='softmax'))
 
         self.architecture = arch
 

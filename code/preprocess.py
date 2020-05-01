@@ -1,9 +1,19 @@
 import os
 import random
 import numpy as np
+from io import BytesIO
+import urllib
+import cv2
+import ssl
 from PIL import Image
+from skimage import io
 import tensorflow as tf
 import hyperparameters as hp
+import pandas as pd
+import matplotlib.pyplot as plt
+from boundingbox import Boundingbox
+
+
 
 class Datasets():
     """ Class for containing the training and test sets as well as
@@ -12,6 +22,8 @@ class Datasets():
     """
 
     def __init__(self, data_path):
+        train_images, train_labels = self.create_training_data()
+        print("READ")
         self.data_path = data_path
 
         # Dictionaries for (label index) <--> (class name)
@@ -24,15 +36,126 @@ class Datasets():
         # Mean and std for standardization
         self.mean = np.zeros((3,))
         self.std = np.ones((3,))
-        self.calc_mean_and_std()
+        self.calc_mean_and_std(train_images)
 
-        # Setup data generators
-        self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), True, True)
-        self.test_data = self.get_data(
-            os.path.join(self.data_path, "test/"), False, False)
 
-    def calc_mean_and_std(self):
+        # # Setup data generators
+        # self.train_data = self.get_data(
+        #     os.path.join(self.data_path, "train/"), True, True)
+        # self.test_data = self.get_data(
+        #     os.path.join(self.data_path, "test/"), False, False)
+
+    """Calculates the IOF between two bounding boxes. 
+    The boxes passed into IOF must be from boundingbox class from boundingbox.py
+
+    Arguments: box1 and box2, objects of boundingbox
+    Returns IOF (intersection / union of box1 and box2)
+    """
+    def create_training_data(self):
+        training_raw_images = pd.read_csv("../data/test-images.csv")
+        class_names = pd.read_csv("../data/class-names.csv")
+        training_annotations = pd.read_csv("../data/test-annotations.csv")
+        
+        train_images = []
+        train_labels = []
+
+
+
+        context = ssl._create_unverified_context()
+        for i, row in training_raw_images.iterrows():
+
+            #All images are external images (URL Links). Code below downloads and analyzes them 
+            image_name = os.path.splitext(row["image_name"])[0]
+            raw_image_file = urllib.request.urlopen(row["image_url"], context=context)
+            raw_image_PIL = Image.open(raw_image_file).convert("RGB")
+            raw_image = np.asarray(raw_image_PIL) #just the image
+            
+            annotation = training_annotations[training_annotations["ImageID"] == image_name]  #annotation of the image          
+            
+            label_name = annotation["LabelName"].values[0]
+            label = class_names.loc[class_names["LabelName"] == label_name].squeeze()[1] #label for the image
+            
+            img = cv2.resize(raw_image, dsize=(hp.img_size, hp.img_size), interpolation=cv2.INTER_AREA)
+
+            #TO SEE THE RESCALED IMAGE, UNCOMMENT THIS
+            # print(img.shape)
+            # plt.imshow(img)
+            # plt.show()
+            # break
+
+            #calculates bounding box, based on the image scale
+            XMin,XMax,YMin,YMax = annotation["XMin"], annotation["XMax"], annotation["YMin"], annotation["YMax"]
+            XMin *= img.shape[1]
+            XMax *= img.shape[1]
+            YMin *= img.shape[0]
+            YMax *= img.shape[0]
+
+            
+            correct_bounding_box = Boundingbox(int(XMin), int(XMax), int(YMin), int(YMax))
+
+            #TO SEE THE VISUALIZATION OF THE BOUNDING BOX, UNCOMMENT THIS
+            # cv2.rectangle(img,(int(XMin),int(YMin)),(int(XMax),int(YMax)),(255,0,0), 2)
+            # plt.figure()
+            # plt.imshow(img)
+            # plt.show()
+            # break
+            
+
+            #now, segmentation using selective search
+            cv2.setUseOptimized(True)
+            selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
+            selective_search.setBaseImage(img)
+            selective_search.switchToSelectiveSearchFast()
+            boxes = selective_search.process()
+            img_copy = img.copy()
+            counter = 0
+            falsecounter = 0
+            flag = 0
+            fflag = 0
+            bflag = 0
+        
+            for i, box in enumerate(boxes):
+                print(i)
+                if i < hp.box_max_count and flag == 0:
+                    x, y, w, h = box
+                    bb = Boundingbox(x, x + w, y, y + h)
+                    iou = self.calc_iof(correct_bounding_box, bb)
+                    if counter < 30:
+                        print(iou)
+                        if iou > 0.70:
+                            timage = img_copy[y:y+h,x:x+w]
+                            resized = cv2.resize(timage, (hp.img_size,hp.img_size), interpolation = cv2.INTER_AREA)
+                            train_images.append(resized)
+                            train_labels.append(label)
+                            counter += 1
+                        else :
+                            fflag =1
+                        if falsecounter <30:
+                            if iou < 0.3:
+                                timage = img_copy[y:y+h,x:x+w]
+                                resized = cv2.resize(timage, (hp.img_size,hp.img_size), interpolation = cv2.INTER_AREA)
+                                train_images.append(resized)
+                                train_labels.append("Nothing")
+                                falsecounter += 1
+                        else :
+                            bflag = 1
+                    if fflag == 1 and bflag == 1:
+                        flag = 1
+            return np.array(train_images), np.array(train_labels)
+
+    
+             
+    def calc_iof(self, box1, box2):
+        print(box1.xmin)
+        dx = abs(max(box1.xmin, box2.xmin) - min(box1.xmax, box2.xmax))
+        dy = abs(max(box1.ymin, box2.ymin) - min(box1.ymax, box2.ymax))
+        i_area = dx * dy
+        if i_area == 0: 
+            return 0.0
+        return i_area / float(box1.area + box2.area - i_area)
+
+
+    def calc_mean_and_std(self, training_images):
         """ Calculate mean and standard deviation of a sample of the
         training dataset for standardization.
 
@@ -42,34 +165,15 @@ class Datasets():
         """
 
         # Get list of all images in training directory
-        file_list = []
-        for root, _, files in os.walk(os.path.join(self.data_path, "train/")):
-            for name in files:
-                if name.endswith(".jpg"):
-                    file_list.append(os.path.join(root, name))
+        data_sample = training_images
+        
 
         # Shuffle filepaths
-        random.shuffle(file_list)
+        random.shuffle(data_sample)
 
         # Take sample of file paths
-        file_list = file_list[:hp.preprocess_sample_size]
-
-        # Allocate space in memory for images
-        data_sample = np.zeros(
-            (hp.preprocess_sample_size, hp.img_size, hp.img_size, 3))
-
-        # Import images
-        for i, file_path in enumerate(file_list):
-            img = Image.open(file_path)
-            img = img.resize((hp.img_size, hp.img_size))
-            img = np.array(img, dtype=np.float32)
-            img /= 255.
-
-            # Grayscale -> RGB
-            if len(img.shape) == 2:
-                img = np.stack([img, img, img], axis=-1)
-
-            data_sample[i] = img
+        data_sample = data_sample[:hp.preprocess_sample_size]
+       
 
         #caculating pixelwise mean and std
         mean = np.zeros((3))

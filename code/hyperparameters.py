@@ -1,6 +1,6 @@
 # Resize image size for task 1. Task 2 must have an image size of 224,
 # so that is hard coded in elsewhere.
-img_size = 224
+img_size = 227
 
 # The number of image scene classes. Don't change this.
 category_num = 15
@@ -24,7 +24,10 @@ batch_size = 10
 # learning_rate is a critical parameter that can dramatically affect
 # whether training succeeds or fails. For most of the experiments in this
 # project the default learning rate is safe.
-learning_rate = 1e-4
+learning_rate = 0.0001
 
 # Momentum on the gradient (if you use a momentum-based optimizer)
 momentum = 0.01
+
+#maximum number of bounding boxes 
+box_max_count = 2000
