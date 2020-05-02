@@ -5,7 +5,7 @@ from your_model import YourModel
 import hyperparameters as hp
 from preprocess import Datasets
 from tensorboard_utils import ImageLabelingLogger, ConfusionMatrixLogger
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from cv2 import cv2
 import matplotlib.pyplot as plt
 import numpy as np

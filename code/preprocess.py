@@ -56,12 +56,7 @@ class Datasets():
         # self.test_data = self.get_data(
         #     os.path.join(self.data_path, "test/"), False, False)
 
-    """Calculates the IOF between two bounding boxes. 
-    The boxes passed into IOF must be from boundingbox class from boundingbox.py
 
-    Arguments: box1 and box2, objects of boundingbox
-    Returns IOF (intersection / union of box1 and box2)
-    """
     def create_training_data(self):
         training_raw_images = pd.read_csv("../data/test-images.csv")
         class_names = pd.read_csv("../data/class-names.csv")
@@ -70,46 +65,44 @@ class Datasets():
         train_images = []
         train_labels = []
 
-
-
         context = ssl._create_unverified_context()
         for i, row in training_raw_images.iterrows():
+            print(str(i) + " image put into training set.")
 
             #All images are external images (URL Links). Code below downloads and analyzes them 
             image_name = os.path.splitext(row["image_name"])[0]
             raw_image_file = urllib.request.urlopen(row["image_url"], context=context)
             raw_image_PIL = Image.open(raw_image_file).convert("RGB")
             raw_image = np.asarray(raw_image_PIL) #just the image
-            
             annotation = training_annotations[training_annotations["ImageID"] == image_name]  #annotation of the image          
-            
+            if annotation.empty:
+                print("Detected empty annotation")
+                continue
             label_name = annotation["LabelName"].values[0]
             label = class_names.loc[class_names["LabelName"] == label_name].squeeze()[1] #label for the image
-            
+            print(label)
             img = cv2.resize(raw_image, dsize=(hp.img_size, hp.img_size), interpolation=cv2.INTER_AREA)
 
-            #TO SEE THE RESCALED IMAGE, UNCOMMENT THIS
+            # # TO SEE THE RESCALED IMAGE, UNCOMMENT THIS
             # print(img.shape)
             # plt.imshow(img)
             # plt.show()
-            # break
-
-            #calculates bounding box, based on the image scale
-            XMin,XMax,YMin,YMax = annotation["XMin"], annotation["XMax"], annotation["YMin"], annotation["YMax"]
-            XMin *= img.shape[1]
-            XMax *= img.shape[1]
-            YMin *= img.shape[0]
-            YMax *= img.shape[0]
-
             
-            correct_bounding_box = Boundingbox(int(XMin), int(XMax), int(YMin), int(YMax))
+            correct_bounding_boxes = []
 
-            #TO SEE THE VISUALIZATION OF THE BOUNDING BOX, UNCOMMENT THIS
-            # cv2.rectangle(img,(int(XMin),int(YMin)),(int(XMax),int(YMax)),(255,0,0), 2)
-            # plt.figure()
-            # plt.imshow(img)
-            # plt.show()
-            # break
+            for i, row in annotation.iterrows():
+                XMin,XMax,YMin,YMax = row["XMin"], row["XMax"], row["YMin"], row["YMax"]
+                XMin *= img.shape[1]
+                XMax *= img.shape[1]
+                YMin *= img.shape[0]
+                YMax *= img.shape[0]
+                correct_bounding_boxes.append(Boundingbox(int(XMin), int(XMax), int(YMin), int(YMax)))
+            
+                # # TO SEE THE VISUALIZATION OF THE BOUNDING BOX, UNCOMMENT THIS
+                # cv2.rectangle(img,(int(XMin),int(YMin)),(int(XMax),int(YMax)),(255,0,0), 2)
+                # plt.figure()
+                # plt.imshow(img)
+                # plt.show()
             
 
             #now, segmentation using selective search
@@ -126,19 +119,18 @@ class Datasets():
             bflag = 0
         
             for i, box in enumerate(boxes):
-                print(i)
                 if i < hp.box_max_count and flag == 0:
-                    x, y, w, h = box
-                    bb = Boundingbox(x, x + w, y, y + h)
-                    iou = self.calc_iof(correct_bounding_box, bb)
-                    if counter < 30:
-                        print(iou)
-                        if iou > 0.70:
-                            timage = img_copy[y:y+h,x:x+w]
-                            resized = cv2.resize(timage, (hp.img_size,hp.img_size), interpolation = cv2.INTER_AREA)
-                            train_images.append(resized)
-                            train_labels.append(label)
-                            counter += 1
+                    for correct_bounding_box in correct_bounding_boxes:
+                        x, y, w, h = box
+                        bb = Boundingbox(x, x + w, y, y + h)
+                        iou = self.calc_iof(correct_bounding_box, bb)
+                        if counter < 30:
+                            if iou > 0.70:
+                                timage = img_copy[y:y+h,x:x+w]
+                                resized = cv2.resize(timage, (hp.img_size,hp.img_size), interpolation = cv2.INTER_AREA)
+                                train_images.append(resized)
+                                train_labels.append(label)
+                                counter += 1
                         else :
                             fflag =1
                         if falsecounter <30:
@@ -152,17 +144,33 @@ class Datasets():
                             bflag = 1
                     if fflag == 1 and bflag == 1:
                         flag = 1
-            return np.array(train_images), np.array(train_labels)
+        return np.array(train_images), np.array(train_labels)
 
     
-             
+    
     def calc_iof(self, box1, box2):
-        print(box1.xmin)
-        dx = abs(max(box1.xmin, box2.xmin) - min(box1.xmax, box2.xmax))
-        dy = abs(max(box1.ymin, box2.ymin) - min(box1.ymax, box2.ymax))
+        """Calculates the IOF between two bounding boxes. 
+        The boxes passed into IOF must be from boundingbox class from boundingbox.py
+
+        Arguments: box1 and box2, objects of boundingbox
+        Returns IOF (intersection / union of box1 and box2)
+        """
+        x1 = max(box1.xmin, box2.xmin)
+        x2 = min(box1.xmax, box2.xmax)
+        y1 = max(box1.ymin, box2.ymin)
+        y2 = min(box1.ymax, box2.ymax)
+        if x2 < x1 or y2 < y1:
+            return 0.0
+
+        dx = abs(x1 - x2)
+        dy = abs(y1 - y2)
         i_area = dx * dy
+
         if i_area == 0: 
             return 0.0
+        assert i_area / float(box1.area + box2.area - i_area) >= 0.0
+        assert i_area / float(box1.area + box2.area - i_area) <= 1.0
+        # print(i_area / float(box1.area + box2.area - i_area))
         return i_area / float(box1.area + box2.area - i_area)
 
 
