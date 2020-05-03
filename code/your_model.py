@@ -12,41 +12,78 @@ class YourModel(tf.keras.Model):
 
         # Optimizer
         self.optimizer = Adam(lr=hp.learning_rate)
-            
+
         arch = []
-        arch.append(Conv2D(filters= 96, input_shape=(227, 227, 3), kernel_size=(11, 11), strides=(4, 4), padding='same', activation='relu'))
-        arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='same'))
-        arch.append(BatchNormalization())
+        arch.append(Conv2D(filters=96, input_shape=(227, 227, 3), kernel_size=(11, 11), strides=(4, 4), padding='valid', activation='relu'))
+        arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
 
         arch.append(Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), padding='same', activation='relu'))
         arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
-        arch.append(BatchNormalization())
 
-        arch.append(Conv2D(filters=384, kernel_size=(3,3), padding='same', activation='relu'))
-        
-        arch.append(Conv2D(filters=384, kernel_size=(3,3), padding='same', activation='relu'))
+        arch.append(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='same', activation='relu'))
 
-        arch.append(Conv2D(filters=256, kernel_size=(3,3), padding='same', activation='relu'))
-        arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
+        arch.append(Conv2D(filters=384, kernel_size=(3,3), strides=(1,1), padding='same', activation='relu'))
+
+        arch.append(Conv2D(filters=256, kernel_size=(3,3), strides=(1,1), padding='same', activation='relu'))
+        arch.append(MaxPool2D(pool_size=(2,2), strides=(2,2), padding='valid'))
 
         # Passing it to a Fully Connected layer
         arch.append(Flatten())
         # 1st Fully Connected Layer
-        arch.append(Dense(4096, input_shape=(227*227*3,), activation='relu'))
+        arch.append(Dense(1024, input_shape=(224*224*3,), activation='relu'))
         # Add Dropout to prevent overfitting
-        arch.append(Dropout(0.5))
+        arch.append(Dropout(0.4))
 
-        arch.append(Dense(4096, activation='relu'))
-        arch.append(Dropout(0.5))
+        # 2nd Fully Connected Layer
+        arch.append(Dense(512, activation='relu'))
+        # Add Dropout
+        arch.append(Dropout(0.4))
 
 
-        arch.append(Dense(200, activation='relu'))
-        arch.append(Dropout(0.5))
+        # 2nd Fully Connected Layer
+        arch.append(Dense(512, activation='relu'))
+        # Add Dropout
+        arch.append(Dropout(0.4))
 
         # Output Layer
-        arch.append(Dense(hp.category_num, activation='softmax'))
+        arch.append(Dense(21, activation='softmax'))
 
         self.architecture = arch
+            
+        # arch = []
+        # arch.append(Conv2D(filters= 96, input_shape=(227, 227, 3), kernel_size=(11, 11), strides=(4, 4), padding='same', activation='relu'))
+        # arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='same'))
+        # arch.append(BatchNormalization())
+
+        # arch.append(Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), padding='same', activation='relu'))
+        # arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
+        # arch.append(BatchNormalization())
+
+        # arch.append(Conv2D(filters=384, kernel_size=(3,3), padding='same', activation='relu'))
+        
+        # arch.append(Conv2D(filters=384, kernel_size=(3,3), padding='same', activation='relu'))
+
+        # arch.append(Conv2D(filters=256, kernel_size=(3,3), padding='same', activation='relu'))
+        # arch.append(MaxPool2D(pool_size=(3,3), strides=(2,2), padding='valid'))
+
+        # # Passing it to a Fully Connected layer
+        # arch.append(Flatten())
+        # # 1st Fully Connected Layer
+        # arch.append(Dense(4096, input_shape=(227*227*3,), activation='relu'))
+        # # Add Dropout to prevent overfitting
+        # arch.append(Dropout(0.5))
+
+        # arch.append(Dense(4096, activation='relu'))
+        # arch.append(Dropout(0.5))
+
+
+        # arch.append(Dense(200, activation='relu'))
+        # arch.append(Dropout(0.5))
+
+        # # Output Layer
+        # arch.append(Dense(hp.category_num, activation='softmax'))
+
+        # self.architecture = arch
 
         # ====================================================================
 
@@ -62,5 +99,5 @@ class YourModel(tf.keras.Model):
     def loss_fn(labels, predictions):
         """ Loss function for the model. """
 
-        return tf.keras.losses.sparse_categorical_crossentropy(
+        return tf.keras.losses.categorical_crossentropy(
             labels, predictions, from_logits=False)

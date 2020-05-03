@@ -34,14 +34,14 @@ class Datasets():
         self.multithread_training_data(50) 
         #at this point, self.train_images and self.train_labels should be all set. 
         
-        self.data_path = data_path
+        # self.data_path = data_path
 
-        # Dictionaries for (label index) <--> (class name)
-        self.idx_to_class = {}
-        self.class_to_idx = {}
+        # # Dictionaries for (label index) <--> (class name)
+        # self.idx_to_class = {}
+        # self.class_to_idx = {}
 
-        # For storing list of classes
-        self.classes = [""] * hp.category_num
+        # # For storing list of classes
+        # self.classes = [""] * hp.category_num
 
         # Mean and std for standardization
         self.mean = np.zeros((3,))
@@ -52,17 +52,11 @@ class Datasets():
         Y_end = encoder.fit_transform(self.train_labels)
 
         #The splitting is done, so we can use it afterwards
-        X_train, X_test, Y_train, Y_test = train_test_split(train_images, Y_end, test_size=0.10)
+        X_train, X_test, Y_train, Y_test = train_test_split(self.train_images, Y_end, test_size=0.10)
 
         self.train_data = self.augment_data(X_train, Y_train)
         self.test_data =  self.augment_data(X_test, Y_test)
 
-
-        # # Setup data generators
-        # self.train_data = self.get_data(
-        #     os.path.join(self.data_path, "train/"), True, True)
-        # self.test_data = self.get_data(
-        #     os.path.join(self.data_path, "test/"), False, False)
 
     def multithread_training_data(self, num_images):
         print("Starting multithreading...")
@@ -229,9 +223,6 @@ class Datasets():
 
         if i_area == 0: 
             return 0.0
-        assert i_area / float(box1.area + box2.area - i_area) >= 0.0
-        assert i_area / float(box1.area + box2.area - i_area) <= 1.0
-        # print(i_area / float(box1.area + box2.area - i_area))
         return i_area / float(box1.area + box2.area - i_area)
 
 

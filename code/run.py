@@ -94,10 +94,27 @@ def main():
 
     datasets = Datasets(ARGS.data)
 
-   
     model = YourModel()
+    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    checkpoint_path = "./your_model_checkpoints/"
+    model.summary()
 
-    checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    #???
+    if ARGS.load_checkpoint is not None:
+        model.load_weights(ARGS.load_checkpoint)
+
+    #makes checkpoint folder if it doesn't exist
+    if not os.path.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
+
+    # Compile model graph
+    model.compile(
+        optimizer=model.optimizer,
+        loss=model.loss_fn,
+        metrics=["accuracy"])
+
+
+    checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', save_freq=1)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
 
     hist = model.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 1000, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
