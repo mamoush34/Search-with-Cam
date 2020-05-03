@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from boundingbox import Boundingbox
 from HotEncoder import HotEncoder
 from sklearn.model_selection import train_test_split
+import threading
+import queue
 
 
 
@@ -24,8 +26,14 @@ class Datasets():
     """
 
     def __init__(self, data_path):
-        train_images, train_labels = self.create_training_data()
-        print("READ")
+
+        #do not touch these 4 lines. Critical for multithreading.
+        self.train_images = queue.Queue()
+        self.train_labels = queue.Queue()     
+        raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
+        self.multithread_training_data(50) 
+        #at this point, self.train_images and self.train_labels should be all set. 
+        
         self.data_path = data_path
 
         # Dictionaries for (label index) <--> (class name)
@@ -38,10 +46,10 @@ class Datasets():
         # Mean and std for standardization
         self.mean = np.zeros((3,))
         self.std = np.ones((3,))
-        self.calc_mean_and_std(train_images)
+        self.calc_mean_and_std(self.train_images)
 
         encoder = HotEncoder()
-        Y_end = encoder.fit_transform(train_labels)
+        Y_end = encoder.fit_transform(self.train_labels)
 
         #The splitting is done, so we can use it afterwards
         X_train, X_test, Y_train, Y_test = train_test_split(train_images, Y_end, test_size=0.10)
@@ -56,8 +64,61 @@ class Datasets():
         # self.test_data = self.get_data(
         #     os.path.join(self.data_path, "test/"), False, False)
 
+    def multithread_training_data(self, num_images):
+        print("Starting multithreading...")
+        images_per_thread = num_images // hp.thread_count
+        threads = []
+        start = 0
+        finish = images_per_thread
+        for i in range(hp.thread_count - 1):
+            thread = threading.Thread(target=self.create_training_data, args=(start, start + images_per_thread))
+            thread.start() 
+            threads.append(thread)
+            start += images_per_thread
+        remaining = num_images - start
+        thread = threading.Thread(target=self.create_training_data, args=(start, start + remaining))
+        thread.start()
+        threads.append(thread)
+        
+        print(str(hp.thread_count) + " threads created.")
+        print("Waiting for threads to finish...")
+        for thread in threads:
+            thread.join()
+        print("All threads have finished. Unpacking results...")
+        self.unpack_train_builder()
 
-    def create_training_data(self):
+    def unpack_train_builder(self):
+        train_images = self.train_images
+        train_labels = self.train_labels
+        arr_images = []
+        arr_labels = []
+        while not train_images.empty():
+            images = train_images.get()
+            labels = train_labels.get()
+            assert len(labels) == len(images)
+            if len(labels) != 0:
+                for i in range(len(labels)):
+                    arr_images.append(np.array(images[i]))
+                    arr_labels.append(np.array(labels[i]))
+        train_images = np.array(arr_images)
+        train_labels = np.array(arr_labels)
+        print(train_images.shape)
+        print(train_labels.shape)
+        self.train_images = train_images
+        self.train_labels = train_labels
+
+        
+    
+    
+    def train_builder(function):
+        def wrapper(self, *args):
+            images, labels = function(self, *args)
+            self.train_images.put(images)
+            self.train_labels.put(labels)
+        return wrapper
+
+    @train_builder
+    def create_training_data(self, start, finish):
         training_raw_images = pd.read_csv("../data/test-images.csv")
         class_names = pd.read_csv("../data/class-names.csv")
         training_annotations = pd.read_csv("../data/test-annotations.csv")
@@ -66,8 +127,8 @@ class Datasets():
         train_labels = []
 
         context = ssl._create_unverified_context()
-        for i, row in training_raw_images.iterrows():
-            print(str(i) + " image put into training set.")
+        for i, row in training_raw_images.iloc[start: finish].iterrows():
+            # print(str(i) + " image put into training set.")
 
             #All images are external images (URL Links). Code below downloads and analyzes them 
             image_name = os.path.splitext(row["image_name"])[0]
@@ -80,7 +141,7 @@ class Datasets():
                 continue
             label_name = annotation["LabelName"].values[0]
             label = class_names.loc[class_names["LabelName"] == label_name].squeeze()[1] #label for the image
-            print(label)
+            # print(label)
             img = cv2.resize(raw_image, dsize=(hp.img_size, hp.img_size), interpolation=cv2.INTER_AREA)
 
             # # TO SEE THE RESCALED IMAGE, UNCOMMENT THIS
@@ -144,7 +205,7 @@ class Datasets():
                             bflag = 1
                     if fflag == 1 and bflag == 1:
                         flag = 1
-        return np.array(train_images), np.array(train_labels)
+        return train_images, train_labels
 
     
     

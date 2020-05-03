@@ -31,3 +31,6 @@ momentum = 0.01
 
 #maximum number of bounding boxes 
 box_max_count = 2000
+
+#how many threads we need to speed up training image extraction process
+thread_count = 50
