@@ -27,13 +27,20 @@ class Datasets():
 
     def __init__(self, data_path):
 
-        #do not touch these 4 lines. Critical for multithreading.
-        self.train_images = queue.Queue()
-        self.train_labels = queue.Queue()     
-        raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
-        self.multithread_training_data(50) 
-        #at this point, self.train_images and self.train_labels should be all set. 
-        
+        if os.path.isfile("../data/train_images.npy") and os.path.isfile("../data/train_labels.npy"):
+            print("Previous data file found. Loading npy files...")
+            self.train_images = np.load("../data/train_images.npy")
+            self.train_labels = np.load("../data/train_labels.npy")
+        else:
+            print("Making new data")
+            #do not touch these 4 lines. Critical for multithreading.
+            self.train_images = queue.Queue()
+            self.train_labels = queue.Queue()     
+            raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
+            self.multithread_training_data(50) 
+            np.save("../data/train_images.npy", self.train_images)
+            np.save("../data/train_labels.npy", self.train_labels)
+            
         # self.data_path = data_path
 
         # # Dictionaries for (label index) <--> (class name)

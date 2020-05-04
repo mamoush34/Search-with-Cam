@@ -11,3 +11,4 @@ results/*
 *.fdb_latexmk
 *.aux
 WebApp/node_modules
+data/
