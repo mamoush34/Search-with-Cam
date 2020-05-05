@@ -141,7 +141,7 @@ def main():
                     resized = cv2.resize(timage, (224,224), interpolation = cv2.INTER_AREA)
                     img = np.expand_dims(resized, axis=0)
                     out= model.predict(img)
-                    if out[0][0] > 0.70:
+                    if out[0][0] > 0.65:
                         cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
             plt.figure()
             plt.imshow(imout)
