@@ -9,6 +9,8 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from cv2 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from keras.preprocessing.image import ImageDataGenerator
+
 
 
 
@@ -113,12 +115,26 @@ def main():
         loss=model.loss_fn,
         metrics=["accuracy"])
 
+    
+    checkpoint = ModelCheckpoint("rcnn_model", monitor='loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min', save_freq=1)
+    early_stop = EarlyStopping(monitor='loss', min_delta=0, patience=100, verbose=1, mode='min')
 
-    checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', save_freq=1)
-    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+    trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
+    traindata = trdata.flow(x=datasets.train_X, y=datasets.train_Y)
+    tsdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
+    testdata = tsdata.flow(x=datasets.test_X, y=datasets.test_Y)
 
-    hist = model.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 1000, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
+    print(f"Train data X shape: {traindata.x.shape}")
+    print(f"Test data X shape: {testdata.x.shape}")
+    print(f"Train data Y shape: {traindata.y.shape}")
+    print(f"Test data Y shape: {testdata.y.shape}")
 
+
+
+    hist = model.fit_generator(generator= traindata, steps_per_epoch= 10, epochs= 10, validation_data= testdata, validation_steps=2, callbacks=[checkpoint, early_stop])
+
+    for key in hist.history:
+        print(key)
 
     #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
     ### results found before.

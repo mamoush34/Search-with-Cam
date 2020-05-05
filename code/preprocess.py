@@ -61,6 +61,11 @@ class Datasets():
         #The splitting is done, so we can use it afterwards
         X_train, X_test, Y_train, Y_test = train_test_split(self.train_images, Y_end, test_size=0.10)
 
+        self.train_X = X_train
+        self.train_Y = Y_train
+        self.test_X = X_test
+        self.test_Y = Y_test
+
         self.train_data = self.augment_data(X_train, Y_train)
         self.test_data =  self.augment_data(X_test, Y_test)
 
