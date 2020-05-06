@@ -1,6 +1,7 @@
 import * as express from "express";
 import { resolve } from "path";
 import * as cors from "cors";
+import * as multer from "multer";
 
 const port = 1050;
 
@@ -19,26 +20,56 @@ server.use((req, _res, next) => {
     next();
 });
 
+
+
 console.log(`Server listening on port ${port}...`);
 server.get("/", (_req, res) => res.redirect("/home"));
 server.get("/home", (_req, res) => res.sendFile(content_path));
 
 
-function runScript() {
-    return spawn('python', [path.join(__dirname, '../code/run.py')])
-}
-
-const script_process = runScript()
-
-script_process.stdout.on('data', (data: any) => {
-    console.log(`data:${data}`);
+let storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, '../communication/rawimage')
+  }, 
+  filename: (req, file, cb) => {
+    //check to see if there are duplicates //TODO: 
+    cb(null, file.originalname + path.extname(file.originalname))
+  }
 })
-script_process.stderr.on('data', (data) => {
-    console.log(`error:${data}`);
-  });
-  script_process.on('close', () => {
-    console.log("Closed");
-  });
+
+let upload = multer({ storage: storage})
+
+server.post('/upload', upload.single('rawimage'), (req, res, next) => {
+  if (!req.file) {
+    return next(new Error('File has not been uploaded'))
+  }
+  // return res.send(req.file);
+});
+
+
+
+
+
+
+
+
+
+
+// function runScript() {
+//     return spawn('python', [path.join(__dirname, '../code/run.py')])
+// }
+
+// // const script_process = runScript()
+
+// // script_process.stdout.on('data', (data: any) => {
+// //     console.log(`data:${data}`);
+// // })
+// // script_process.stderr.on('data', (data) => {
+// //     console.log(`error:${data}`);
+// //   });
+// //   script_process.on('close', () => {
+// //     console.log("Closed");
+// //   });
 
 
 

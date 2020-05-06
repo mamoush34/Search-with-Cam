@@ -12,3 +12,4 @@ results/*
 *.aux
 WebApp/node_modules
 data/
+communication/
