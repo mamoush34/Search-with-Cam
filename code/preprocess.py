@@ -3,7 +3,7 @@ import random
 import numpy as np
 from io import BytesIO
 import urllib
-from cv2 import cv2
+import cv2
 import ssl
 from PIL import Image
 from skimage import io
@@ -16,6 +16,8 @@ from HotEncoder import HotEncoder
 from sklearn.model_selection import train_test_split
 import threading
 import queue
+from keras.preprocessing.image import ImageDataGenerator
+
 
 
 
@@ -29,8 +31,8 @@ class Datasets():
 
         if os.path.isfile("../data/train_images.npy") and os.path.isfile("../data/train_labels.npy"):
             print("Previous data file found. Loading npy files...")
-            self.train_images = np.load("../data/train_images.npy")
-            self.train_labels = np.load("../data/train_labels.npy")
+            self.train_images = np.array(np.load("../data/train_images.npy"))
+            self.train_labels = np.array(np.load("../data/train_labels.npy"))
         else:
             print("Making new data")
             #do not touch these 4 lines. Critical for multithreading.
@@ -60,6 +62,11 @@ class Datasets():
 
         #The splitting is done, so we can use it afterwards
         X_train, X_test, Y_train, Y_test = train_test_split(self.train_images, Y_end, test_size=0.10)
+
+        self.train_X = X_train
+        self.train_Y = Y_train
+        self.test_X = X_test
+        self.test_Y = Y_test
 
         self.train_data = self.augment_data(X_train, Y_train)
         self.test_data =  self.augment_data(X_test, Y_test)
@@ -243,10 +250,11 @@ class Datasets():
         """
 
         # Get list of all images in training directory
-        data_sample = training_images
+        data_sample = np.copy(training_images)
         
 
         # Shuffle filepaths
+        
         random.shuffle(data_sample)
 
         # Take sample of file paths
@@ -297,7 +305,7 @@ class Datasets():
         return img
     
     def augment_data(self, X_data, Y_data):
-        augmenter = tf.keras.preprocessing.image.ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
+        augmenter = ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
         return augmenter.flow(x=X_data, y=Y_data)
 
     # def get_data(self, path, shuffle, augment):
