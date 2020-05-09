@@ -126,7 +126,8 @@ def main():
         image = Image.open("../example_image/airplane.png")
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")
-        converted = image.save("airplane.jpg")
+        image.save("../example_image/airplane.jpg")
+        converted = plt.imread("../example_image/airplane.jpg")
         results = make_prediction(model_final, converted)
         print(results)
 
