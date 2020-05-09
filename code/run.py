@@ -149,10 +149,10 @@ def main():
     tsdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
     testdata = tsdata.flow(x=datasets.test_X, y=datasets.test_Y)
 
-    print(f"Train data X shape: {traindata.x.shape}")
-    print(f"Test data X shape: {testdata.x.shape}")
-    print(f"Train data Y shape: {traindata.y.shape}")
-    print(f"Test data Y shape: {testdata.y.shape}")
+    # print(f"Train data X shape: {traindata.x.shape}")
+    # print(f"Test data X shape: {testdata.x.shape}")
+    # print(f"Train data Y shape: {traindata.y.shape}")
+    # print(f"Test data Y shape: {testdata.y.shape}")
 
 
 
