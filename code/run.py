@@ -17,46 +17,30 @@ from keras.applications.vgg16 import VGG16
 from keras.optimizers import Adam
 from HotEncoder import HotEncoder
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-
-
-
-
-
+from PIL import Image
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-# def parse_args():
-#     """ Perform command-line argument parsing. """
+def parse_args():
+    """ Perform command-line argument parsing. """
 
-#     parser = argparse.ArgumentParser(
-#         description="Let's train some neural nets!")
-#     parser.add_argument(
-#         '--data',
-#         default=os.getcwd() + '/../data/',
-#         help='Location where the dataset is stored.')
-#     parser.add_argument(
-#         '--load-checkpoint',
-#         default=None,
-#         help='''Path to model checkpoint file (should end with the
-#         extension .h5). Checkpoints are automatically saved when you
-#         train your model. If you want to continue training from where
-#         you left off, this is how you would load your weights. In
-#         the case of task 2, passing a checkpoint path will disable
-#         the loading of VGG weights.''')
-#     parser.add_argument(
-#         '--confusion',
-#         action='store_true',
-#         help='''Log a confusion matrix at the end of each
-#         epoch (viewable in Tensorboard). This is turned off
-#         by default as it takes a little bit of time to complete.''')
-#     parser.add_argument(
-#         '--evaluate',
-#         action='store_true',
-#         help='''Skips training and evaluates on the test set once.
-#         You can use this to test an already trained model by loading
-#         its checkpoint.''')
+    parser = argparse.ArgumentParser(
+        description="Let's train some neural nets!")
+    parser.add_argument(
+        '--data',
+        default=os.getcwd() + '/../data/',
+        help='Location where the dataset is stored.')
+    parser.add_argument(
+        '--load-checkpoint',
+        default=None,
+        help='''Path to model checkpoint file (should end with the
+        extension .h5). Checkpoints are automatically saved when you
+        train your model. If you want to continue training from where
+        you left off, this is how you would load your weights. In
+        the case of task 2, passing a checkpoint path will disable
+        the loading of VGG weights.''')
 
-#     return parser.parse_args()
+    return parser.parse_args()
 
 def make_prediction(model, image):
     cv2.setUseOptimized(True)
@@ -76,7 +60,10 @@ def make_prediction(model, image):
             if out[0][0] > 0.70:
                 ##add these if you're not running on gcp
                 # cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
-                results.append(result)
+                results.append(x)
+                results.append(x + w)
+                results.append(y)
+                result.append(y+ h)
     ##add these if you're not running on gcp
     # plt.figure()
     # plt.imshow(imout)
@@ -92,10 +79,14 @@ def main():
     if not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
     
-    if os.path.isfile(checkpoint_path + "rcnn_vgg16_1.h5"):
-        print("Found an existing model! Loading it...")
-        model_final = tf.keras.models.load_model(checkpoint_path + "rcnn_vgg16_1.h5")
-        model_final.summary()
+    if ARGS.load_checkpoint is not None:
+        if ARGS.load_checkpoint.endswith('.h5') and os.path.isfile(ARGS.load_checkpoint):
+                print("Found an existing model! Loading it...")
+                model_final = tf.keras.models.load_model(ARGS.load_checkpoint)
+                model_final.summary()
+        else:
+            print("Error: Pass in h5 file of the model!!")
+            return 
     else:
         datasets = Datasets(ARGS.data)
 
@@ -119,13 +110,18 @@ def main():
 
         hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
-    if os.path.isfile("../example_image/car.jpg"):
-        image = plt.imread("../example_image/car.jpg")
-        results = make_prediction(model_final, image)
-        print(results)
+    if os.path.isfile("../example_image/airplane.png"):
+        image = Image.open("../example_image/airplane.png")
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+        image.save("../example_image/airplane.jpg")
+        converted = plt.imread("../example_image/airplane.jpg")
+
+        ## You want to get this results to web App, after you pass the image they upload with converting it to jpg, above
+        ## is an example in how to do that
+        results = make_prediction(model_final, converted)
 
 
-
-# ARGS = parse_args()
+ARGS = parse_args()
 
 main()
