@@ -13,9 +13,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
 from keras.layers import Dense
 from keras import Model
-
-
-
+from keras.applications.vgg16 import VGG16
 
 
 
