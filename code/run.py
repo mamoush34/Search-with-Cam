@@ -119,8 +119,8 @@ def main():
 
         hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
-    if os.path.isfile("../example_image/car.jpg"):
-        image = plt.imread("../example_image/car.jpg")
+    if os.path.isfile("../example_image/airplane.png"):
+        image = plt.imread("../example_image/airplane.png")
         results = make_prediction(model_final, image)
         print(results)
 
