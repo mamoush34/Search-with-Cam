@@ -158,7 +158,7 @@ def main():
 
 
 
-    hist = model_final.fit_generator(generator= traindata, steps_per_epoch= 10, epochs= 1000, validation_data= testdata, validation_steps=2, callbacks=[checkpoint,early])
+    hist = model_final.fit_generator(generator= traindata, steps_per_epoch= 10, epochs= 60, validation_data= testdata, validation_steps=2, callbacks=[checkpoint,early])
 
     #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
     ### results found before.
