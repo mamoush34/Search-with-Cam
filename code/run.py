@@ -102,36 +102,36 @@ def test(model, test_data):
 def main():
     """ Main function. """
 
-    datasets = Datasets(ARGS.data)
-
-    vggmodel = VGG16(weights='imagenet', include_top=True)
-    vggmodel.summary()   
-
-    for layers in (vggmodel.layers)[:15]:
-        print(layers)
-        layers.trainable = False
-
-    X= vggmodel.layers[-2].output
-    predictions = Dense(20, activation="softmax")(X)
-    model_final = Model(input = vggmodel.input, output = predictions)
-    opt = Adam(lr=0.0001)
-
-    #???
-    # if ARGS.load_checkpoint is not None:
-    #     model_final.load_weights(ARGS.load_checkpoint)
-
-    checkpoint_path = "./your_model_checkpoints/"
+    checkpoint_path = "./saved_models/"
     #makes checkpoint folder if it doesn't exist
     if not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
+    
+    if os.path.isfile(checkpoint_path + "rcnn_vgg16_1.h5"):
+        print("Found an existing model! Loading it...")
+        model_final = tf.keras.models.load_model(checkpoint_path + "rcnn_vgg16_1.h5")
+    else:
+        datasets = Datasets(ARGS.data)
 
-    model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
-    model_final.summary()
+        vggmodel = VGG16(weights='imagenet', include_top=True)
+        vggmodel.summary()   
 
-    checkpoint = ModelCheckpoint(checkpoint_path + "ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
-    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+        for layers in (vggmodel.layers)[:15]:
+            print(layers)
+            layers.trainable = False
 
-    hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
+        X= vggmodel.layers[-2].output
+        predictions = Dense(20, activation="softmax")(X)
+        model_final = Model(input = vggmodel.input, output = predictions)
+        opt = Adam(lr=0.0001)
+
+        model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
+        model_final.summary()
+
+        checkpoint = ModelCheckpoint(checkpoint_path + "rcnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+        early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+
+        hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
     #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
     ### results found before.
