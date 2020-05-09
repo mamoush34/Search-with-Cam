@@ -120,17 +120,18 @@ def main():
     # if ARGS.load_checkpoint is not None:
     #     model_final.load_weights(ARGS.load_checkpoint)
 
-    # #makes checkpoint folder if it doesn't exist
-    # if not os.path.exists(checkpoint_path):
-    #     os.makedirs(checkpoint_path)
+    checkpoint_path = "./your_model_checkpoints/"
+    #makes checkpoint folder if it doesn't exist
+    if not os.path.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
 
     model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
     model_final.summary()
 
-    checkpoint = ModelCheckpoint("ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
-    early = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+    checkpoint = ModelCheckpoint(checkpoint_path + "ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
 
-    hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early])
+    hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
     #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
     ### results found before.
