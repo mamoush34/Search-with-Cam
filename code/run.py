@@ -118,7 +118,8 @@ def main():
 
     if os.path.isfile("../example_image/harbor.jp"):
         image = plt.imread("../example_image/harbor.jp")
-        make_prediction(model_final, image)    
+        results = make_prediction(model_final, image)
+        print(f"Results found:{results}")
 
 
 
