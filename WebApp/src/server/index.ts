@@ -2,6 +2,7 @@ import * as express from "express";
 import { resolve } from "path";
 import * as cors from "cors";
 import * as multer from "multer";
+const WebSocket = require('ws');
 
 const port = 1050;
 
@@ -19,6 +20,7 @@ server.use((req, _res, next) => {
     console.log(req.originalUrl);
     next();
 });
+
 
 
 
@@ -43,7 +45,22 @@ server.post('/upload', upload.single('rawimage'), (req, res, next) => {
   if (!req.file) {
     return next(new Error('File has not been uploaded'))
   }
-  // return res.send(req.file);
+  return res.send(req.file);
+});
+
+
+
+
+ 
+const wss = new WebSocket.Server({ port: 1051 });
+ 
+wss.on('connection', function connection(ws:any) {
+  ws.on('message', function incoming(message:any) {
+    console.log('received: %s', message);
+    ws.send("Received Images.");
+  });
+ 
+  ws.send('something');
 });
 
 

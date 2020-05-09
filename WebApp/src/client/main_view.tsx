@@ -1,20 +1,21 @@
-
 import * as React from "react";
 import "./main_view.scss";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
-
+import { json } from "express";
 
 
 @observer
 export default class MainView extends React.Component {
 
+    private socket:WebSocket = new WebSocket("ws://localhost:1051");
     @observable resultList:JSX.Element[] = [];
-
+    
     componentDidMount() {
-        let segmentationSocket:WebSocket = new WebSocket("/getsegmentation")
-        let resultSocket:WebSocket = new WebSocket("/getresult");
-        segmentationSocket.onmessage = (event) => {
+        if ("WebSocket" in window){
+            console.log("Websocket is supported")
+        }
+        this.socket.onopen = (event) => {
             //parse the event data
             /**
              * Should be a JSON data that has:
@@ -23,15 +24,35 @@ export default class MainView extends React.Component {
              *  segmentation: num of seg
              * }
              */
+            console.log("recieved");
+            this.socket.send("Hello, Server!")
         }
-        resultSocket.onmessage = (event) => {
-            //parse the event data. 
-            /**
-             * Should be a JSON data that has:
-             * {boundingboxes: arrays of [xmin, xmax, ymin, ymax]}
-             * 
-             */
+        this.socket.onmessage = (event) => {
+            const data = event.data
+            let jsonData = JSON.parse(data)
+            if (jsonData.type = "segmentation") {
+                const elements:JSX.Element[] = [];
+                const div = <div className ="container">{elements}</div>
+                const img = <img src={jsonData.imgpath} style={{height: "224px", width:"224px"}}></img>
+                const header = <h2>Segmented Image</h2>   
+                const message = <h3>IOU: {jsonData.iou}</h3>   
+                elements.push(header);
+                elements.push(message);
+                elements.push(img);
+                this.resultList.push(div);
+            } else if (jsonData.type = "result") {
+                const elements:JSX.Element[] = [];
+                const div = <div className ="container">{elements}</div>
+                const img = <img src={jsonData.imgpath} style={{height: "224px", width:"224px"}}></img>
+                const header = <h2>Segmented Image</h2>   
+                const message = <h3>IOU: {jsonData.iou}</h3>   
+                elements.push(header);
+                elements.push(message);
+                elements.push(img);
+                this.resultList.push(div);
+            }
         }
+        
     }
 
     @action
@@ -46,10 +67,13 @@ export default class MainView extends React.Component {
             const file = files[0]
             const reader:FileReader = new FileReader();
             reader.onload = () => {
-                const img = <img src={(reader.result as string)}></img>
+                const elements:JSX.Element[] = [];
+                const div = <div className ="container">{elements}</div>
+                const img = <img src={(reader.result as string)} style={{height: "280px", width:"400px"}}></img>
                 const text = <h2>Your raw input image</h2>   
-                this.resultList.push(text);
-                this.resultList.push(img);
+                elements.push(text)
+                elements.push(img)
+                this.resultList.push(div)
             }
             reader.readAsDataURL(file);
         }
@@ -69,18 +93,18 @@ export default class MainView extends React.Component {
     render() {
         return (
             <div>
-                <div className={"container"}>
-                    <h1 className="wrapper">Search With Cam!</h1>
+                <div className="query-container">
                     <div>
-                        <h2 >R-CNN with Visual Information</h2>
-                        <h3 > Click on "Analyze Image" below to input your image.</h3>
+                        <h1 className="wrapper">Search With Cam!</h1>
+                        <h2>R-CNN with Visual Information</h2>
                     </div>
-                    <form action="/upload" method="post" encType="multipart/form-data" name="uploadform" id ="uploadform">
-                        <input type="file" name= "rawimage" accept="image/jpeg, image/jpg, image/png"/> 
-                        <input type="submit" value="Upload a file" onClick={this.onFileLoad}/>
-                    </form>
-                    {/* <button onClick = {() => {document.getElementById('selectedFile')!.click()}}>Analyze Image</button>  */}
-                         
+                    <div>
+                        <form action="/upload" method="post" encType="multipart/form-data" name="uploadform" id ="uploadform">
+                            <input type="file" name= "rawimage" accept="image/jpeg, image/jpg, image/png"/> 
+                        </form>
+                        <button onClick = {this.onFileLoad}>Analyze Image</button> 
+                    </div>
+                   
                 </div>
                 <div className="container"> 
                     {this.resultList.map(el => {return el;})}

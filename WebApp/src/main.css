@@ -1,17 +1,23 @@
+html{
+    overflow-y: visible;
+    overflow-x: hidden;
+}
 h1{
     font-family: "Helvetica Neue";
-    font-size: 38px;
+    font-size: 72px;
     font-style: normal;
-    color: #464646;
+    color: #969696;
     margin: 0px;
     padding: 0px;
+    font-weight: 500;
 }
 
 h2{
     font-family: "Helvetica Neue";
-    font-size: 22px;
+    font-size: 32px;
     font-style: normal;
-    color: #464646;
+    font-weight: 500;
+    color: #969696;
     margin: 0px;
     padding: 0px;
 }
@@ -20,7 +26,8 @@ h3{
     font-family: "Helvetica Neue";
     font-size: 18px;
     font-style: normal;
-    color: #464646;
+    font-weight: 500;
+    color: #969696;
     margin: 0px;
     padding: 0px;
 }
@@ -29,19 +36,27 @@ p{
     font-family: "Helvetica Neue";
     font-size: 14px;
     font-style: normal;
-    color: #464646;
+    color: #969696;
+}
+
+input {
+    font-family: "Helvetica Neue";
+    font-size: 14px;
+    font-style: normal;
+    color: #969696;
 }
 
 button{
+    padding: 7px 25px;
+    background: #7F63F4;
+    border-radius: 5px;
     display: inline-block;
-    padding: 13px 25px;
     color: white; 
     font-family: "Helvetica Neue";
-    font-size: 18px;
+    font-size: 20px;
     font-style: normal;
     font-weight: bold;
     border-radius: 5px;
-    background-color: #3962d3;
     width: fit-content;
     text-align: center;
 }
