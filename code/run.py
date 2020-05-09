@@ -6,10 +6,16 @@ import hyperparameters as hp
 from preprocess import Datasets
 from tensorboard_utils import ImageLabelingLogger, ConfusionMatrixLogger
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
-from cv2 import cv2
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from keras.optimizers import Adam
+from keras.layers import Dense
+from keras import Model
+
+
+
 
 
 
@@ -96,10 +102,22 @@ def main():
 
     datasets = Datasets(ARGS.data)
 
-    model = YourModel()
-    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    vggmodel = VGG16(weights='imagenet', include_top=True)
+    vggmodel.summary()   
+
+    for layers in (vggmodel.layers)[:15]:
+        print(layers)
+        layers.trainable = False
+
+    X= vggmodel.layers[-2].output
+    predictions = Dense(2, activation="softmax")(X)
+    model_final = Model(input = vggmodel.input, output = predictions)
+    opt = Adam(lr=0.0001)
+
+    # model = YourModel()
+    # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
     checkpoint_path = "./your_model_checkpoints/"
-    model.summary()
+    # model.summary()
 
     #???
     if ARGS.load_checkpoint is not None:
@@ -109,15 +127,22 @@ def main():
     if not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
 
-    # Compile model graph
-    model.compile(
-        optimizer=model.optimizer,
-        loss=model.loss_fn,
-        metrics=["accuracy"])
+    model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
+    model_final.summary()
+
+    # # Compile model graph
+    # model.compile(
+    #     optimizer=model.optimizer,
+    #     loss=model.loss_fn,
+    #     metrics=["accuracy"])
 
     
-    checkpoint = ModelCheckpoint("rcnn_model", monitor='loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min', save_freq=1)
-    early_stop = EarlyStopping(monitor='loss', min_delta=0, patience=100, verbose=1, mode='min')
+    # checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min', save_freq=1)
+    # early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='min')
+
+    checkpoint = ModelCheckpoint("ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    early = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
+
 
     trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
     traindata = trdata.flow(x=datasets.train_X, y=datasets.train_Y)
@@ -131,37 +156,34 @@ def main():
 
 
 
-    hist = model.fit_generator(generator= traindata, steps_per_epoch= 10, epochs= 10, validation_data= testdata, validation_steps=2, callbacks=[checkpoint, early_stop])
-
-    for key in hist.history:
-        print(key)
+    hist = model_final.fit_generator(generator= traindata, steps_per_epoch= 10, epochs= 1000, validation_data= testdata, validation_steps=2, callbacks=[checkpoint,early])
 
     #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
     ### results found before.
-    iterations = 0
-    path = "../data/test-images.csv"
-    selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
+    # iterations = 0
+    # path = "../data/test-images.csv"
+    # selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
 
-    for e,i in enumerate(os.listdir(path)):
-        if i.startswith("4"):
-            iterations += 1
-            img = cv2.imread(os.path.join(path,i))
-            selective_search.setBaseImage(img)
-            selective_search.switchToSelectiveSearchFast()
-            ssresults = selective_search.process()
-            imout = img.copy()
-            for e,result in enumerate(ssresults):
-                if e < 2000:
-                    x,y,w,h = result
-                    timage = imout[y:y+h,x:x+w]
-                    resized = cv2.resize(timage, (224,224), interpolation = cv2.INTER_AREA)
-                    img = np.expand_dims(resized, axis=0)
-                    out= model.predict(img)
-                    if out[0][0] > 0.65:
-                        cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
-            plt.figure()
-            plt.imshow(imout)
-            break
+    # for e,i in enumerate(os.listdir(path)):
+    #     if i.startswith("4"):
+    #         iterations += 1
+    #         img = cv2.imread(os.path.join(path,i))
+    #         selective_search.setBaseImage(img)
+    #         selective_search.switchToSelectiveSearchFast()
+    #         ssresults = selective_search.process()
+    #         imout = img.copy()
+    #         for e,result in enumerate(ssresults):
+    #             if e < 2000:
+    #                 x,y,w,h = result
+    #                 timage = imout[y:y+h,x:x+w]
+    #                 resized = cv2.resize(timage, (224,224), interpolation = cv2.INTER_AREA)
+    #                 img = np.expand_dims(resized, axis=0)
+    #                 out= model.predict(img)
+    #                 if out[0][0] > 0.65:
+    #                     cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
+    #         plt.figure()
+    #         plt.imshow(imout)
+    #         break
 
     # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
     # checkpoint_path = "./your_model_checkpoints/"

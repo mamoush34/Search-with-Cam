@@ -3,7 +3,7 @@ import random
 import numpy as np
 from io import BytesIO
 import urllib
-from cv2 import cv2
+import cv2
 import ssl
 from PIL import Image
 from skimage import io
