@@ -124,6 +124,8 @@ def main():
 
     if os.path.isfile("../example_image/airplane.png"):
         image = Image.open("../example_image/airplane.png")
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
         converted = image.save("airplane.jpg")
         results = make_prediction(model_final, converted)
         print(results)
