@@ -86,10 +86,11 @@ def main():
         os.makedirs(checkpoint_path)
     
     if ARGS.load_checkpoint is not None:
-        if ARGS.load_checkpoint.endswith('.h5'):
-            print("Found an existing model! Loading it...")
-            model_final = tf.keras.models.load_model(ARGS.load_checkpoint)
-            model_final.summary()
+        print(ARGS.load_checkpoint)
+        if ARGS.load_checkpoint.endswith('.h5') and os.path.isfile(ARGS.load_checkpoint):
+                print("Found an existing model! Loading it...")
+                model_final = tf.keras.models.load_model(ARGS.load_checkpoint)
+                model_final.summary()
         else:
             print("Error: Pass in h5 file of the model!!")
     else:
