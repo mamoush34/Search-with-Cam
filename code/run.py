@@ -93,6 +93,7 @@ def main():
                 model_final.summary()
         else:
             print("Error: Pass in h5 file of the model!!")
+            return 
     else:
         datasets = Datasets(ARGS.data)
 
