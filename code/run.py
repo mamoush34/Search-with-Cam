@@ -19,12 +19,6 @@ from HotEncoder import HotEncoder
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from PIL import Image
 
-
-
-
-
-
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def parse_args():
@@ -86,7 +80,6 @@ def main():
         os.makedirs(checkpoint_path)
     
     if ARGS.load_checkpoint is not None:
-        print(ARGS.load_checkpoint)
         if ARGS.load_checkpoint.endswith('.h5') and os.path.isfile(ARGS.load_checkpoint):
                 print("Found an existing model! Loading it...")
                 model_final = tf.keras.models.load_model(ARGS.load_checkpoint)
@@ -123,8 +116,10 @@ def main():
             image = image.convert("RGB")
         image.save("../example_image/airplane.jpg")
         converted = plt.imread("../example_image/airplane.jpg")
+
+        ## You want to get this results to web App, after you pass the image they upload with converting it to jpg, above
+        ## is an example in how to do that
         results = make_prediction(model_final, converted)
-        print(results)
 
 
 ARGS = parse_args()
