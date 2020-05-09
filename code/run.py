@@ -17,6 +17,8 @@ from keras.applications.vgg16 import VGG16
 from keras.optimizers import Adam
 from HotEncoder import HotEncoder
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from PIL import Image
+
 
 
 
@@ -121,7 +123,7 @@ def main():
         hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
     if os.path.isfile("../example_image/airplane.png"):
-        image = plt.imread("../example_image/airplane.png")
+        image = Image.open("../example_image/airplane.png")
         converted = image.save("airplane.jpg")
         results = make_prediction(model_final, converted)
         print(results)
