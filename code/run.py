@@ -17,6 +17,8 @@ from keras.applications.vgg16 import VGG16
 from keras.optimizers import Adam
 from HotEncoder import HotEncoder
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from sklearn.model_selection import train_test_split
+
 
 
 
@@ -101,7 +103,14 @@ def test(model, test_data):
 def main():
     """ Main function. """
 
-    datasets = Datasets(ARGS.data)
+    # datasets = Datasets(ARGS.data)
+
+    train_images = np.load("./data/train_images.npy")
+    train_labels = np.load("./data/train_labels.npy")
+
+    X_new = np.array(train_images)
+    y_new = np.array(train_labels)   
+
 
     vggmodel = VGG16(weights='imagenet', include_top=True)
     vggmodel.summary()   
@@ -117,19 +126,25 @@ def main():
 
     # model = YourModel()
     # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-    checkpoint_path = "./your_model_checkpoints/"
+    # checkpoint_path = "./your_model_checkpoints/"
     # model.summary()
 
     #???
-    if ARGS.load_checkpoint is not None:
-        model_final.load_weights(ARGS.load_checkpoint)
+    # if ARGS.load_checkpoint is not None:
+    #     model_final.load_weights(ARGS.load_checkpoint)
 
-    #makes checkpoint folder if it doesn't exist
-    if not os.path.exists(checkpoint_path):
-        os.makedirs(checkpoint_path)
+    # #makes checkpoint folder if it doesn't exist
+    # if not os.path.exists(checkpoint_path):
+    #     os.makedirs(checkpoint_path)
 
     model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
     model_final.summary()
+
+    lenc = HotEncoder()
+    Y =  lenc.fit_transform(y_new)
+
+    X_train, X_test , y_train, y_test = train_test_split(X_new,Y,test_size=0.10)
+
 
     # # Compile model graph
     # model.compile(
@@ -144,9 +159,9 @@ def main():
   
 
     trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
-    traindata = trdata.flow(x=datasets.train_X, y=datasets.train_Y)
+    traindata = trdata.flow(x=X_train, y=y_train)
     tsdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
-    testdata = tsdata.flow(x=datasets.test_X, y=datasets.test_Y)
+    testdata = tsdata.flow(x=X_test, y=y_test)
 
     # print(f"Train data X shape: {traindata.x.shape}")
     # print(f"Test data X shape: {testdata.x.shape}")
