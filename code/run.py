@@ -1,4 +1,4 @@
-import os
+import os, keras
 import argparse
 import tensorflow as tf
 from your_model import YourModel
@@ -119,7 +119,7 @@ def main():
 
     #???
     if ARGS.load_checkpoint is not None:
-        model.load_weights(ARGS.load_checkpoint)
+        model_final.load_weights(ARGS.load_checkpoint)
 
     #makes checkpoint folder if it doesn't exist
     if not os.path.exists(checkpoint_path):
