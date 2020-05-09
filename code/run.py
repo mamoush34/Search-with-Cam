@@ -122,7 +122,8 @@ def main():
 
     if os.path.isfile("../example_image/airplane.png"):
         image = plt.imread("../example_image/airplane.png")
-        results = make_prediction(model_final, image)
+        converted = image.save("airplane.jpg")
+        results = make_prediction(model_final, converted)
         print(results)
 
 
