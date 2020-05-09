@@ -76,8 +76,8 @@ def make_prediction(model, image):
             if out[0][0] > 0.70:
                 cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
                 results.append(result)
-    plt.figure()
-    plt.imshow(imout)
+    # plt.figure()
+    # plt.imshow(imout)
     return results
 
 
