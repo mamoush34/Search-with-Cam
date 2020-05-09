@@ -53,9 +53,9 @@ class Datasets():
         # self.classes = [""] * hp.category_num
 
         # Mean and std for standardization
-        # self.mean = np.zeros((3,))
-        # self.std = np.ones((3,))
-        # self.calc_mean_and_std(self.train_images)
+        self.mean = np.zeros((3,))
+        self.std = np.ones((3,))
+        self.calc_mean_and_std(self.train_images)
 
         encoder = HotEncoder()
         Y_end = encoder.fit_transform(self.train_labels)
@@ -68,14 +68,9 @@ class Datasets():
         self.test_X = X_test
         self.test_Y = Y_test
 
-        trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
-        self.train_data = trdata.flow(x=self.train_X, y=self.train_Y)
-        tsdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
-        self.test_data =  tsdata.flow(x=self.test_X, y=self.test_Y)
+        self.train_data = self.augment_data(X_train, Y_train)
+        self.test_data =  self.augment_data(X_test, Y_test)
 
-
-       
-       
 
     def multithread_training_data(self, num_images):
         print("Starting multithreading...")
@@ -309,7 +304,7 @@ class Datasets():
         return img
     
     def augment_data(self, X_data, Y_data):
-        augmenter = tf.keras.preprocessing.image.ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
+        augmenter = ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
         return augmenter.flow(x=X_data, y=Y_data)
 
     # def get_data(self, path, shuffle, augment):
