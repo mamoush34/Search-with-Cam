@@ -74,8 +74,10 @@ def make_prediction(model, image):
             img = np.expand_dims(resized, axis=0)
             out= model.predict(img)
             if out[0][0] > 0.70:
-                cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
+                ##add these if you're not running on gcp
+                # cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
                 results.append(result)
+    ##add these if you're not running on gcp
     # plt.figure()
     # plt.imshow(imout)
     return results
@@ -93,6 +95,7 @@ def main():
     if os.path.isfile(checkpoint_path + "rcnn_vgg16_1.h5"):
         print("Found an existing model! Loading it...")
         model_final = tf.keras.models.load_model(checkpoint_path + "rcnn_vgg16_1.h5")
+        model_final.summary()
     else:
         datasets = Datasets(ARGS.data)
 
@@ -116,8 +119,8 @@ def main():
 
         hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
-    if os.path.isfile("../example_image/harbor.jpg"):
-        image = plt.imread("../example_image/harbor.jpg")
+    if os.path.isfile("../example_image/car.jpg"):
+        image = plt.imread("../example_image/car.jpg")
         results = make_prediction(model_final, image)
         print(results)
 
