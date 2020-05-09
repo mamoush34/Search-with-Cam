@@ -36,11 +36,10 @@ class Datasets():
             #do not touch these 4 lines. Critical for multithreading.
             self.train_images = queue.Queue()
             self.train_labels = queue.Queue()     
-            # raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
-            self.multithread_training_data(50) 
+            raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
+            self.multithread_training_data(raw_images_count) 
             np.save("../data/train_images.npy", self.train_images)
             np.save("../data/train_labels.npy", self.train_labels)
-            
         # self.data_path = data_path
 
         # # Dictionaries for (label index) <--> (class name)
