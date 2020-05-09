@@ -1,19 +1,22 @@
-import os, keras
 import argparse
-import tensorflow as tf
-from your_model import YourModel
-import hyperparameters as hp
+# from your_model import YourModel
+# import hyperparameters as hp
 from preprocess import Datasets
 from tensorboard_utils import ImageLabelingLogger, ConfusionMatrixLogger
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
-import cv2
+import os, keras
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.preprocessing.image import ImageDataGenerator
-from keras.optimizers import Adam
+import tensorflow as tf
+import cv2
 from keras.layers import Dense
 from keras import Model
+from keras import optimizers
+from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.vgg16 import VGG16
+from keras.optimizers import Adam
+from HotEncoder import HotEncoder
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 
 
@@ -108,7 +111,7 @@ def main():
         layers.trainable = False
 
     X= vggmodel.layers[-2].output
-    predictions = Dense(2, activation="softmax")(X)
+    predictions = Dense(20, activation="softmax")(X)
     model_final = Model(input = vggmodel.input, output = predictions)
     opt = Adam(lr=0.0001)
 
@@ -138,9 +141,7 @@ def main():
     # checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min', save_freq=1)
     # early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='min')
 
-    checkpoint = ModelCheckpoint("ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
-    early = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
-
+  
 
     trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
     traindata = trdata.flow(x=datasets.train_X, y=datasets.train_Y)
@@ -151,6 +152,9 @@ def main():
     # print(f"Test data X shape: {testdata.x.shape}")
     # print(f"Train data Y shape: {traindata.y.shape}")
     # print(f"Test data Y shape: {testdata.y.shape}")
+
+    checkpoint = ModelCheckpoint("ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    early = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
 
 
 
