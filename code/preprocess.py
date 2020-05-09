@@ -53,9 +53,9 @@ class Datasets():
         # self.classes = [""] * hp.category_num
 
         # Mean and std for standardization
-        # self.mean = np.zeros((3,))
-        # self.std = np.ones((3,))
-        # self.calc_mean_and_std(self.train_images)
+        self.mean = np.zeros((3,))
+        self.std = np.ones((3,))
+        self.calc_mean_and_std(self.train_images)
 
         encoder = HotEncoder()
         Y_end = encoder.fit_transform(self.train_labels)
@@ -250,10 +250,11 @@ class Datasets():
         """
 
         # Get list of all images in training directory
-        data_sample = training_images
+        data_sample = np.copy(training_images)
         
 
         # Shuffle filepaths
+        
         random.shuffle(data_sample)
 
         # Take sample of file paths
