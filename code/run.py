@@ -104,13 +104,6 @@ def main():
 
     datasets = Datasets(ARGS.data)
 
-    # train_images = np.load("./data/train_images.npy")
-    # train_labels = np.load("./data/train_labels.npy")
-
-    # X_new = np.array(train_images)
-    # y_new = np.array(train_labels)   
-
-
     vggmodel = VGG16(weights='imagenet', include_top=True)
     vggmodel.summary()   
 
@@ -123,11 +116,6 @@ def main():
     model_final = Model(input = vggmodel.input, output = predictions)
     opt = Adam(lr=0.0001)
 
-    # model = YourModel()
-    # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-    # checkpoint_path = "./your_model_checkpoints/"
-    # model.summary()
-
     #???
     # if ARGS.load_checkpoint is not None:
     #     model_final.load_weights(ARGS.load_checkpoint)
@@ -138,21 +126,6 @@ def main():
 
     model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
     model_final.summary()
-
-    # # Compile model graph
-    # model.compile(
-    #     optimizer=model.optimizer,
-    #     loss=model.loss_fn,
-    #     metrics=["accuracy"])
-
-    
-    # checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min', save_freq=1)
-    # early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='min')
-
-    # print(f"Train data X shape: {traindata.x.shape}")
-    # print(f"Test data X shape: {testdata.x.shape}")
-    # print(f"Train data Y shape: {traindata.y.shape}")
-    # print(f"Test data Y shape: {testdata.y.shape}")
 
     checkpoint = ModelCheckpoint("ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
     early = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
