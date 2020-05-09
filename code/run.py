@@ -108,18 +108,18 @@ def main():
         checkpoint = ModelCheckpoint(checkpoint_path + "rcnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
         early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
 
-        hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
+        hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 1000, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
-    if os.path.isfile("../example_image/airplane.png"):
-        image = Image.open("../example_image/airplane.png")
-        if image.mode in ("RGBA", "P"):
-            image = image.convert("RGB")
-        image.save("../example_image/airplane.jpg")
-        converted = plt.imread("../example_image/airplane.jpg")
+    # if os.path.isfile("../example_image/airplane.png"):
+    #     image = Image.open("../example_image/airplane.png")
+    #     if image.mode in ("RGBA", "P"):
+    #         image = image.convert("RGB")
+    #     image.save("../example_image/airplane.jpg")
+    #     converted = plt.imread("../example_image/airplane.jpg")
 
-        ## You want to get this results to web App, after you pass the image they upload with converting it to jpg, above
-        ## is an example in how to do that
-        results = make_prediction(model_final, converted)
+    #     ## You want to get this results to web App, after you pass the image they upload with converting it to jpg, above
+    #     ## is an example in how to do that
+    #     results = make_prediction(model_final, converted)
 
 
 ARGS = parse_args()
