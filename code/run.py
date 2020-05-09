@@ -76,6 +76,7 @@ def make_prediction(model, image):
             if out[0][0] > 0.70:
                 ##add these if you're not running on gcp
                 # cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
+                print("I found match!!!!")
                 results.append(result)
     ##add these if you're not running on gcp
     # plt.figure()
