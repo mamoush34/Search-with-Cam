@@ -29,8 +29,8 @@ class Datasets():
 
         if os.path.isfile("../data/train_images.npy") and os.path.isfile("../data/train_labels.npy"):
             print("Previous data file found. Loading npy files...")
-            self.train_images = np.load("../data/train_images.npy")
-            self.train_labels = np.load("../data/train_labels.npy")
+            self.train_images = np.array(np.load("../data/train_images.npy"))
+            self.train_labels = np.array(np.load("../data/train_labels.npy"))
         else:
             print("Making new data")
             #do not touch these 4 lines. Critical for multithreading.
@@ -66,9 +66,14 @@ class Datasets():
         self.test_X = X_test
         self.test_Y = Y_test
 
-        self.train_data = self.augment_data(X_train, Y_train)
-        self.test_data =  self.augment_data(X_test, Y_test)
+        trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
+        self.train_data = trdata.flow(x=self.train_X, y=self.train_Y)
+        tsdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
+        self.test_data =  tsdata.flow(x=self.test_X, y=self.test_Y)
 
+
+       
+       
 
     def multithread_training_data(self, num_images):
         print("Starting multithreading...")
