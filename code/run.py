@@ -17,7 +17,6 @@ from keras.applications.vgg16 import VGG16
 from keras.optimizers import Adam
 from HotEncoder import HotEncoder
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from sklearn.model_selection import train_test_split
 
 
 
@@ -103,13 +102,13 @@ def test(model, test_data):
 def main():
     """ Main function. """
 
-    # datasets = Datasets(ARGS.data)
+    datasets = Datasets(ARGS.data)
 
-    train_images = np.load("./data/train_images.npy")
-    train_labels = np.load("./data/train_labels.npy")
+    # train_images = np.load("./data/train_images.npy")
+    # train_labels = np.load("./data/train_labels.npy")
 
-    X_new = np.array(train_images)
-    y_new = np.array(train_labels)   
+    # X_new = np.array(train_images)
+    # y_new = np.array(train_labels)   
 
 
     vggmodel = VGG16(weights='imagenet', include_top=True)
@@ -140,12 +139,6 @@ def main():
     model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
     model_final.summary()
 
-    lenc = HotEncoder()
-    Y =  lenc.fit_transform(y_new)
-
-    X_train, X_test , y_train, y_test = train_test_split(X_new,Y,test_size=0.10)
-
-
     # # Compile model graph
     # model.compile(
     #     optimizer=model.optimizer,
@@ -156,13 +149,6 @@ def main():
     # checkpoint = ModelCheckpoint("rcnn_model", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min', save_freq=1)
     # early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='min')
 
-  
-
-    trdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
-    traindata = trdata.flow(x=X_train, y=y_train)
-    tsdata = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=90)
-    testdata = tsdata.flow(x=X_test, y=y_test)
-
     # print(f"Train data X shape: {traindata.x.shape}")
     # print(f"Test data X shape: {testdata.x.shape}")
     # print(f"Train data Y shape: {traindata.y.shape}")
@@ -171,9 +157,7 @@ def main():
     checkpoint = ModelCheckpoint("ieeercnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
     early = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
 
-
-
-    hist = model_final.fit_generator(generator= traindata, steps_per_epoch= 10, epochs= 60, validation_data= testdata, validation_steps=2, callbacks=[checkpoint,early])
+    hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 60, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early])
 
     #### I want to check in with this stuff, because I believe they do this to plot the bounding boxes, but they should've sued the 
     ### results found before.
