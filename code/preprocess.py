@@ -43,10 +43,10 @@ class Datasets():
             np.save("../data/train_images.npy", self.train_images)
             np.save("../data/train_labels.npy", self.train_labels)
        
-        # Mean and std for standardization
-        self.mean = np.zeros((3,))
-        self.std = np.ones((3,))
-        self.calc_mean_and_std(self.train_images)
+        # # Mean and std for standardization
+        # self.mean = np.zeros((3,))
+        # self.std = np.ones((3,))
+        # self.calc_mean_and_std(self.train_images)
 
         encoder = HotEncoder()
         Y_end = encoder.fit_transform(self.train_labels)
