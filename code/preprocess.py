@@ -39,18 +39,10 @@ class Datasets():
             self.train_images = queue.Queue()
             self.train_labels = queue.Queue()     
             raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
-            self.multithread_training_data(raw_images_count) 
+            self.multithread_training_data(3000) 
             np.save("../data/train_images.npy", self.train_images)
             np.save("../data/train_labels.npy", self.train_labels)
-        # self.data_path = data_path
-
-        # # Dictionaries for (label index) <--> (class name)
-        # self.idx_to_class = {}
-        # self.class_to_idx = {}
-
-        # # For storing list of classes
-        # self.classes = [""] * hp.category_num
-
+       
         # Mean and std for standardization
         self.mean = np.zeros((3,))
         self.std = np.ones((3,))
@@ -306,67 +298,3 @@ class Datasets():
     def augment_data(self, X_data, Y_data):
         augmenter = ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
         return augmenter.flow(x=X_data, y=Y_data)
-
-    # def get_data(self, path, shuffle, augment):
-    #     """ Returns an image data generator which can be iterated
-    #     through for images and corresponding class labels.
-
-    #     Arguments:
-    #         path - Filepath of the data being imported, such as
-    #                "../data/train" or "../data/test"
-    #         shuffle - Boolean value indicating whether the data should
-    #                   be randomly shuffled.
-    #         augment - Boolean value indicating whether the data should
-    #                   be augmented or not.
-
-    #     Returns:
-    #         An iterable image-batch generator
-    #     """
-
-    #     if augment:
-    #         #augmentation
-    #         data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-    #             preprocessing_function=self.preprocess_fn, 
-    #             shear_range=0.2,
-    #             zoom_range=0.2,
-    #             horizontal_flip=True,
-    #             fill_mode='nearest'
-    #             )
-
-    #         # ============================================================
-    #     else:
-    #         # Don't modify this
-    #         data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-    #             preprocessing_function=self.preprocess_fn)
-
-    #     #setting the image size
-    #     img_size = hp.img_size
-
-    #     classes_for_flow = None
-
-    #     # Make sure all data generators are aligned in label indices
-    #     if bool(self.idx_to_class):
-    #         classes_for_flow = self.classes
-
-    #     # Form image data generator from directory structure
-    #     data_gen = data_gen.flow_from_directory(
-    #         path,
-    #         target_size=(img_size, img_size),
-    #         class_mode='sparse',
-    #         batch_size=hp.batch_size,
-    #         shuffle=shuffle,
-    #         classes=classes_for_flow)
-
-    #     # Setup the dictionaries if not already done
-    #     if not bool(self.idx_to_class):
-    #         unordered_classes = []
-    #         for dir_name in os.listdir(path):
-    #             if os.path.isdir(os.path.join(path, dir_name)):
-    #                 unordered_classes.append(dir_name)
-
-    #         for img_class in unordered_classes:
-    #             self.idx_to_class[data_gen.class_indices[img_class]] = img_class
-    #             self.class_to_idx[img_class] = int(data_gen.class_indices[img_class])
-    #             self.classes[int(data_gen.class_indices[img_class])] = img_class
-
-    #     return data_gen
