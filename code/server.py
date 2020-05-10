@@ -1,36 +1,40 @@
 import json 
-import numpy as np
-import math
-import http
-import bottle
-from bottle import run, post, request, response
-import config
+import asyncio
+import websockets
+import os
+from analyze import segmentation
 
 
-bottle.BaseRequest.MEMFILE_MAX = 1024 * 1024 * 1024 * 1024
+async def receiver(websocket, path):
+    jsonString = await websocket.recv()
+    jsonObject = json.loads(jsonString);
+    if (jsonObject["type"] == "segmentation"):
+        filename = jsonObject["filename"]
+        path = "../../communication/rawimage/" + filename
+        norm_points = segmentation(path)
+        obj = {
+            "type" : "segmentation", 
+            "boxes" : norm_points, 
+            "iou" : 0.65,
+        }
+        string = json.dumps(obj)
+        await websocket.send(string)
+        
+
+    elif (jsonObject["type"] == "predict"):
+        print(jsonObject)
+        
 
 
 
+    # await websocket.send(greeting)
 
-@post('/predict')
-def get_keywords_post():
-    def action(phrase):
-        client = authenticate_client()
-        return get_keywords(client, phrase)
-    return jsonify('phrase', action)
-
-
-
-
-def jsonify(key, action):
-    received_data = dict(request.json) #turn json file into dictionary
-    if key in received_data: #if there is key in the attribute
-        result = {'result' : action(received_data[key]), 'status' : 'success'}
-        return json.dumps(result)
-    return json.dumps({'status' : 'failed'})
-    
 
 
 if __name__ == "__main__":  
-    #run the server
-    run(host=config.HOST, port=config.PORT)
+    #run the socket server
+    start_server = websockets.serve(receiver, "localhost", 1234)
+
+    print("Server running.")
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()

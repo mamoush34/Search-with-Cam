@@ -35,7 +35,7 @@ let storage = multer.diskStorage({
   }, 
   filename: (req, file, cb) => {
     //check to see if there are duplicates //TODO: 
-    cb(null, file.originalname + path.extname(file.originalname))
+    cb(null, file.originalname)
   }
 })
 
@@ -45,7 +45,7 @@ server.post('/upload', upload.single('rawimage'), (req, res, next) => {
   if (!req.file) {
     return next(new Error('File has not been uploaded'))
   }
-  return res.send(req.file);
+  // return res.send(req.file);
 });
 
 
