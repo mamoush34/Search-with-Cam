@@ -18,6 +18,8 @@ from keras.optimizers import Adam
 from HotEncoder import HotEncoder
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from PIL import Image
+import hyperparameters as hp
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -54,7 +56,7 @@ def make_prediction(model, image):
         if e < 2000:
             x,y,w,h = result
             timage = imout[y:y+h,x:x+w]
-            resized = cv2.resize(timage, (224,224), interpolation = cv2.INTER_AREA)
+            resized = cv2.resize(timage, (hp.img_size,hp.img_size), interpolation = cv2.INTER_AREA)
             img = np.expand_dims(resized, axis=0)
             out= model.predict(img)
             if out[0][0] > 0.70:
