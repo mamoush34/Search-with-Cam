@@ -100,7 +100,7 @@ def main():
             layers.trainable = False
 
         X= vggmodel.layers[-2].output
-        predictions = Dense(20, activation="softmax")(X)
+        predictions = Dense(187, activation="softmax")(X)
         model_final = Model(input = vggmodel.input, output = predictions)
         opt = Adam(lr=0.0001)
 
