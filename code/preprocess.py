@@ -39,7 +39,7 @@ class Datasets():
             self.train_images = queue.Queue()
             self.train_labels = queue.Queue()     
             raw_images_count = pd.read_csv("../data/test-images.csv").shape[0]
-            self.multithread_training_data(2000) 
+            self.multithread_training_data(1000) 
             np.save("../data/train_images.npy", self.train_images)
             np.save("../data/train_labels.npy", self.train_labels)
        
