@@ -9,6 +9,12 @@ from keras.models import load_model
 model = None; 
 
 async def receiver(websocket, path):
+    """
+    Socket that handles segmentation and predict queries
+    INPUT: websocket - the tcp connection 
+           path - path to the image
+    OUTPUT: none (except this function sends result back to nodejs client)
+    """
     jsonString = await websocket.recv()
     jsonObject = json.loads(jsonString);
     print(jsonObject["type"])
@@ -33,7 +39,6 @@ async def receiver(websocket, path):
             "type" : "predict", 
             "boxes" : norm_points, 
             "labels" : labels,
-            # "percentages" : percentages,
         }
         string = json.dumps(obj)
         print("sent")

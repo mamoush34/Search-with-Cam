@@ -72,7 +72,18 @@ export default class MainView extends React.Component {
                     this.drawBoxes(ctx, jsonData, "red")
                     const labels:string[] = jsonData.labels
                     if (labels.length != 0){
-                        this.resultList.push(<h2>Wikipedia link: https://en.wikipedia.org/wiki/ + {labels[0]}</h2>)
+                        let uniqueLabels:String[] = []
+                        const elements:JSX.Element[] = [];
+                        const div = <div className ="container">{elements}</div>
+                        labels.forEach(label => {
+                            if (!uniqueLabels.includes(label)){
+                                uniqueLabels.push(label)
+                            }
+                        })
+                        uniqueLabels.forEach(ulabel => {
+                            elements.push(<h2><a href={"https://en.wikipedia.org/wiki/" + ulabel}>Wikipedia link: https://en.wikipedia.org/wiki/{ulabel}</a></h2>)
+                        })
+                        this.resultList.push(div)
                     }
                 }
                 reader.readAsDataURL(this.file!); 
