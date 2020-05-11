@@ -12,5 +12,4 @@ results/*
 *.aux
 WebApp/node_modules
 data/
-communication/
-code/saved_models
+code/saved_models/*

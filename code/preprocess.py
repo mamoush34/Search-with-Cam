@@ -59,6 +59,9 @@ class Datasets():
 
 
     def multithread_training_data(self, num_images):
+        """
+        Multithreads the image processing with 50 threads
+        """
         print("Starting multithreading...")
         images_per_thread = num_images // hp.thread_count
         threads = []
@@ -82,6 +85,9 @@ class Datasets():
         self.unpack_train_builder()
 
     def unpack_train_builder(self):
+        """
+        Unpacks the multithreading and returns the results into images and labels
+        """
         train_images = self.train_images
         train_labels = self.train_labels
         arr_images = []
@@ -105,6 +111,9 @@ class Datasets():
     
     
     def train_builder(function):
+        """
+        Wrapper class that helps with multithreading data allocation
+        """
         def wrapper(self, *args):
             images, labels = function(self, *args)
             self.train_images.put(images)
@@ -113,6 +122,9 @@ class Datasets():
 
     @train_builder
     def create_training_data(self, start, finish):
+        """
+        Creates data, given start index and finish index (index corresponds to csv files)
+        """
         training_raw_images = pd.read_csv("../data/test-images.csv")
         class_names = pd.read_csv("../data/class-names.csv")
         training_annotations = pd.read_csv("../data/test-annotations.csv")
