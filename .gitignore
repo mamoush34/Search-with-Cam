@@ -13,3 +13,4 @@ results/*
 WebApp/node_modules
 data/
 communication/
+code/saved_models

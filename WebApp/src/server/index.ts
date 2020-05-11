@@ -45,49 +45,26 @@ server.post('/upload', upload.single('rawimage'), (req, res, next) => {
   if (!req.file) {
     return next(new Error('File has not been uploaded'))
   }
-  // return res.send(req.file);
+  // return res.send("");
 });
-
-
-
-
- 
-const wss = new WebSocket.Server({ port: 1051 });
- 
-wss.on('connection', function connection(ws:any) {
-  ws.on('message', function incoming(message:any) {
-    console.log('received: %s', message);
-    ws.send("Received Images.");
-  });
- 
-  ws.send('something');
-});
-
-
-
-
-
-
-
 
 
 
 // function runScript() {
-//     return spawn('python', [path.join(__dirname, '../code/run.py')])
+//     return spawn('python', [path.join(__dirname, '../code/server.py')])
 // }
 
-// // const script_process = runScript()
+// const script_process = runScript()
 
-// // script_process.stdout.on('data', (data: any) => {
-// //     console.log(`data:${data}`);
-// // })
-// // script_process.stderr.on('data', (data) => {
-// //     console.log(`error:${data}`);
-// //   });
-// //   script_process.on('close', () => {
-// //     console.log("Closed");
-// //   });
-
+// script_process.stdout.on('data', (data: any) => {
+//     console.log(`data:${data}`);
+// })
+// script_process.stderr.on('data', (data) => {
+//     console.log(`error:${data}`);
+//   });
+//   script_process.on('close', () => {
+//     console.log("Closed");
+//   });
 
 
 server.listen(port);
