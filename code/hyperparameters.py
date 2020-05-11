@@ -34,3 +34,6 @@ box_max_count = 2000
 
 #how many threads we need to speed up training image extraction process
 thread_count = 50
+
+#the number of classes
+num_classes = 187

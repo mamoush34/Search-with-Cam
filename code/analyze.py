@@ -20,6 +20,15 @@ def normalize(boxes, imgwidth, imgheight):
 
 
 def predict(model, image): 
+    """ 
+    Finds the coordinates of the bounding boxes that satisfy a threshold.
+    The coordinates get appended in the order of xMin, xMax, yMin, YMax to a 1D list.
+    Inputs
+    - image: the image to detect objects for
+    - model: the trained model that will do the predictions
+    Returns
+    - results: list of coordinates of the bounding boxes that satisfy the threshold.
+    """
     cv2.setUseOptimized(True)
     selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
     selective_search.setBaseImage(image)
@@ -35,15 +44,10 @@ def predict(model, image):
             img = np.expand_dims(resized, axis=0)
             out= model.predict(img)
             if out[0][0] > 0.70:
-                ##add these if you're not running on gcp
-                # cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
                 results.append(x)
                 results.append(x + w)
                 results.append(y)
                 result.append(y+ h)
-    ##add these if you're not running on gcp
-    # plt.figure()
-    # plt.imshow(imout)
     return results
 
 def segmentation(path):  
