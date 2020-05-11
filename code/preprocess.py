@@ -42,11 +42,6 @@ class Datasets():
             self.multithread_training_data(1000) 
             np.save("../data/train_images.npy", self.train_images)
             np.save("../data/train_labels.npy", self.train_labels)
-       
-        # # Mean and std for standardization
-        # self.mean = np.zeros((3,))
-        # self.std = np.ones((3,))
-        # self.calc_mean_and_std(self.train_images)
 
         encoder = HotEncoder()
         Y_end = encoder.fit_transform(self.train_labels)
@@ -207,7 +202,6 @@ class Datasets():
         return train_images, train_labels
 
     
-    
     def calc_iof(self, box1, box2):
         """Calculates the IOF between two bounding boxes. 
         The boxes passed into IOF must be from boundingbox class from boundingbox.py
@@ -230,71 +224,10 @@ class Datasets():
             return 0.0
         return i_area / float(box1.area + box2.area - i_area)
 
-
-    def calc_mean_and_std(self, training_images):
-        """ Calculate mean and standard deviation of a sample of the
-        training dataset for standardization.
-
-        Arguments: none
-
-        Returns: none
-        """
-
-        # Get list of all images in training directory
-        data_sample = np.copy(training_images)
-        
-
-        # Shuffle filepaths
-        
-        random.shuffle(data_sample)
-
-        # Take sample of file paths
-        data_sample = data_sample[:hp.preprocess_sample_size]
-       
-
-        #caculating pixelwise mean and std
-        mean = np.zeros((3))
-        std = np.zeros((3))
-        for i in data_sample:
-            for dim in range(3):
-                image_channel = i[..., dim]
-                mean[dim] += np.mean(image_channel)
-                std[dim] += np.std(image_channel)
-        mean /= len(data_sample)
-        std /= len(data_sample)
-        self.mean = mean
-        self.std = std
-        
-
-        # ==========================================================
-
-        print("Dataset mean: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
-            self.mean[0], self.mean[1], self.mean[2]))
-
-        print("Dataset std: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
-            self.std[0], self.std[1], self.std[2]))
-
-    def standardize(self, img):
-        """ Function for applying standardization to an input image.
-
-        Arguments:
-            img - numpy array of shape (image size, image size, 3)
-
-        Returns:
-            img - numpy array of shape (image size, image size, 3)
-        """
-        #standardization
-        for i in range(len(self.mean)):
-            (img[...,i] - self.mean[i]) / self.std[i]
-        return img
-
-    def preprocess_fn(self, img):
-        """ Preprocess function for ImageDataGenerator. """
-
-        img = img / 255.
-        img = self.standardize(img)
-        return img
     
     def augment_data(self, X_data, Y_data):
+        """
+        Returns a generator that augments the passed data according to flips and rotations.
+        """
         augmenter = ImageDataGenerator(horizontal_flip= True, vertical_flip=True, rotation_range=90)
         return augmenter.flow(x=X_data, y=Y_data)

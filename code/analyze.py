@@ -20,6 +20,15 @@ def normalize(boxes, imgwidth, imgheight):
 
 
 def predict(model, path): 
+    """ 
+    Finds the coordinates of the bounding boxes that satisfy a threshold.
+    The coordinates get appended in the order of xMin, xMax, yMin, YMax to a 1D list.
+    Inputs
+    - image: the image to detect objects for
+    - model: the trained model that will do the predictions
+    Returns
+    - results: list of coordinates of the bounding boxes that satisfy the threshold.
+    """
     image = cv2.imread(path)
     image = cv2.resize(image, dsize=(hp.img_size, hp.img_size), interpolation=cv2.INTER_AREA)
     cv2.setUseOptimized(True)

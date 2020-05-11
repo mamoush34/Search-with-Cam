@@ -1,8 +1,5 @@
 import argparse
-# from your_model import YourModel
-# import hyperparameters as hp
 from preprocess import Datasets
-from tensorboard_utils import ImageLabelingLogger, ConfusionMatrixLogger
 import os, keras
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -45,6 +42,15 @@ def parse_args():
     return parser.parse_args()
 
 def make_prediction(model, image):
+    """ 
+    Finds the coordinates of the bounding boxes that satisfy a threshold.
+    The coordinates get appended in the order of xMin, xMax, yMin, YMax to a 1D list.
+    Inputs
+    - image: the image to detect objects for
+    - model: the trained model that will do the predictions
+    Returns
+    - results: list of coordinates of the bounding boxes that satisfy the threshold.
+    """
     cv2.setUseOptimized(True)
     selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
     selective_search.setBaseImage(image)
@@ -60,15 +66,10 @@ def make_prediction(model, image):
             img = np.expand_dims(resized, axis=0)
             out= model.predict(img)
             if out[0][0] > 0.70:
-                ##add these if you're not running on gcp
-                # cv2.rectangle(imout, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
                 results.append(x)
                 results.append(x + w)
                 results.append(y)
                 result.append(y+ h)
-    ##add these if you're not running on gcp
-    # plt.figure()
-    # plt.imshow(imout)
     return results
 
 
@@ -81,6 +82,7 @@ def main():
     if not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
     
+    #Loading model if user requested it
     if ARGS.load_checkpoint is not None:
         if ARGS.load_checkpoint.endswith('.h5') and os.path.isfile(ARGS.load_checkpoint):
                 print("Found an existing model! Loading it...")
@@ -90,38 +92,32 @@ def main():
             print("Error: Pass in h5 file of the model!!")
             return 
     else:
+        ### Load the data
         datasets = Datasets(ARGS.data)
 
         vggmodel = VGG16(weights='imagenet', include_top=True)
         vggmodel.summary()   
 
+        ### Freezes every layeer in vggmodel
         for layers in (vggmodel.layers)[:15]:
             print(layers)
             layers.trainable = False
 
         X= vggmodel.layers[-2].output
-        predictions = Dense(187, activation="softmax")(X)
+
+        #A connected layer is added for predictions
+        predictions = Dense(hp.num_classes, activation="softmax")(X)
         model_final = Model(input = vggmodel.input, output = predictions)
-        opt = Adam(lr=0.0001)
+        opt = Adam(lr= hp.learning_rate)
 
         model_final.compile(loss = keras.losses.categorical_crossentropy, optimizer = opt, metrics=["accuracy"])
         model_final.summary()
-
+        
+        #Training configurations are set and training is performed through fit_generator.
         checkpoint = ModelCheckpoint(checkpoint_path + "rcnn_vgg16_1.h5", monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
         early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=100, verbose=1, mode='auto')
 
-        hist = model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 1000, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
-
-    # if os.path.isfile("../example_image/airplane.png"):
-    #     image = Image.open("../example_image/airplane.png")
-    #     if image.mode in ("RGBA", "P"):
-    #         image = image.convert("RGB")
-    #     image.save("../example_image/airplane.jpg")
-    #     converted = plt.imread("../example_image/airplane.jpg")
-
-    #     ## You want to get this results to web App, after you pass the image they upload with converting it to jpg, above
-    #     ## is an example in how to do that
-    #     results = make_prediction(model_final, converted)
+        model_final.fit_generator(generator= datasets.train_data, steps_per_epoch= 10, epochs= 1000, validation_data= datasets.test_data, validation_steps=2, callbacks=[checkpoint,early_stop])
 
 
 ARGS = parse_args()

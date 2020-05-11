@@ -50,21 +50,4 @@ server.post('/upload', upload.single('rawimage'), (req, res, next) => {
 
 
 
-// function runScript() {
-//     return spawn('python', [path.join(__dirname, '../code/server.py')])
-// }
-
-// const script_process = runScript()
-
-// script_process.stdout.on('data', (data: any) => {
-//     console.log(`data:${data}`);
-// })
-// script_process.stderr.on('data', (data) => {
-//     console.log(`error:${data}`);
-//   });
-//   script_process.on('close', () => {
-//     console.log("Closed");
-//   });
-
-
 server.listen(port);
