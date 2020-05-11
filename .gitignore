@@ -12,4 +12,4 @@ results/*
 *.aux
 WebApp/node_modules
 data/
-code/saved_models/*
+*.h5
